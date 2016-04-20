@@ -1,0 +1,23 @@
+Requirements
+============
+
+  * Twisted 8.1.0 or later
+  * help2man for building the man pages
+
+Installation
+============
+
+  * Other
+    As with other Python packages, the standard way of installing from source
+    is:
+
+      python setup.py install
+
+Building the documentation
+==========================
+
+  You can build the HTML documentation using a tool such as Epydoc::
+
+   $ epydoc  --html --output html --url \
+        http://github.com/mapmapteam/openshow/ --name openshow --verbose \
+        --simple-term --css white openshow 

@@ -1,0 +1,9 @@
+*.pyc
+.*.swp
+_trial_temp
+html
+*.egg-info
+build
+dist
+*.1
+.DS_Store
