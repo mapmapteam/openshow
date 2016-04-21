@@ -20,5 +20,5 @@ if __name__ == "__main__":
         sys.path.insert(0, d)
         os.environ["PATH"] += ":%s" % (os.path.join(d, SCRIPTS_DIR))
 
-    from openshow.app import runner
+    from openshow import runner
     runner.run()
