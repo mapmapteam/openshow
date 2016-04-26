@@ -55,7 +55,7 @@ class MainFrame(wx.Frame):
 
         go_button = wx.Button(self, label="GO")
         go_button.Bind(wx.EVT_BUTTON, self._go_button_cb)
-        sizer.Add(go_button, 1, wx.EXPAND)
+        sizer.Add(go_button, 1, wx.ALL | wx.CENTER)
 
         self.SetSizer(sizer)
         self.SetAutoLayout(True)

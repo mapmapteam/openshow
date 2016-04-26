@@ -39,7 +39,7 @@ class Project(object):
         """
         @param doc: xml.dom.minidom.Document instance
         """
-        ret = {}
+        ret = []
         cue_elements = doc.getElementsByTagName("cue")
         for cue_element in cue_elements:
             # Parse its attributes
@@ -73,10 +73,13 @@ class Project(object):
                     _args = cue_element.getAttribute("args")
                 _cue = cue.OscCue(_identifier, _pre_wait, _post_wait, _host, _port,
                         _path, _args)
-                ret[_identifier] = _cue
+                ret.append(_cue)
         return ret
 
     def get_cue_sheet(self):
+        """
+        @rtype: L{openshow.cue.CueSheet}
+        """
         return self._cue_sheet
 
 

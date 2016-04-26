@@ -3,6 +3,7 @@
 """
 A project contains cues. XML files are used to describe projects.
 """
+from openshow import sig
 
 AUTO_CONTINUE = "auto-continue"
 AUTO_FOLLOW = "auto-follow"
@@ -115,39 +116,85 @@ class OscCue(Cue):
             value = [value]
         self._args = value
 
+    def trigger(self):
+        raise NotImplementedError("TODO")
+
 
 class CueSheet(object):
+    """
+    A Cue sheet is a list of Cues.
+    """
     def __init__(self):
-        self._cues = {}
+        self._cues = []
+        self._active_index = 0
+
+    def get_active_cue_index(self):
+        """
+        Returns the index of the current active cue.
+        @rtype value: C{int}
+        """
+        return self._active_index
+
+    def select_next_cue(self):
+        """
+        Selects the next cue after the active one.
+        @rtype value: C{bool}
+        """
+        if self._active_index < self.get_size():
+            self._active_index = self._active_index + 1
+            return True
+        else:
+            # print("No more cues.")
+            return False
 
     def set_cues(self, cues):
         """
         @param cues: Dict of cues.
-        @type cues: C{dict}
+        @type cues: C{list}
         """
         self._cues = cues
 
     def get_cues(self):
         """
-        @rtype: C{dict}
+        @rtype: C{list}
         """
-        return self._cues.values()
+        return self._cues
 
-    def add_cue(self, identifier, value):
+    def append_cue(self, value):
         """
         @param identifier: Number/identifier for the cue.
-        @type identifier: C{str}
         @type value: L{Cue}
         """
-        self._cues[str(identifier)] = value
+        self._cues.append(value)
 
-    def get_cue(self, identifier):
+    def get_cue_by_identifier(self, identifier):
         """
+        Get cue by identifier. (Number)
         @param identifier: Number/identifier for the cue.
         @type identifier: C{str}
         @rtype: L{Cue}
+        @raise: L{RuntimeError}
         """
         for _cue in self._cues:
             if _cue.get_identifier() == identifier:
                 return _cue
-        return None
+        raise RuntimeError("No such cue %s" % (identifier))
+        # return None
+    
+    def get_size(self):
+        """
+        @rtype: C{int}
+        """
+        return len(self._cues)
+    
+    def get_cue_by_index(self, index):
+        """
+        Get cue by index.
+        @type index: C{int}
+        @raise: L{RuntimeError}
+        @rtype: L{Cue}
+        """
+        if index >= self.get_size():
+            raise RuntimeError("No cue for index %s" % (index))
+        else:
+            return self._cues[index]
