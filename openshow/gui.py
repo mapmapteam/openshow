@@ -8,6 +8,7 @@ import wx
 from twisted.internet import reactor
 import os
 
+
 def show_open_file_dialog(parent):
     """
     Open a file.
@@ -42,7 +43,7 @@ class MainFrame(wx.Frame):
 
         menuBar.Append(file_menu, "&File")
         self.SetMenuBar(menuBar)
-        
+
         # make sure reactor.stop() is used to stop event loop:
         wx.EVT_CLOSE(self, lambda evt: reactor.stop())
 
