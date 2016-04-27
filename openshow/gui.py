@@ -2,10 +2,13 @@
 """
 Our graphical user interface.
 """
-import sys
-import wx
+if __name__ == "__main__":
+    from twisted.internet import wxreactor
+    wxreactor.install()
 # At this point, wxreactor has already been installed.
 from twisted.internet import reactor
+import sys
+import wx
 import os
 
 
