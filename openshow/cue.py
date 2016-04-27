@@ -4,6 +4,8 @@
 A project contains cues. XML files are used to describe projects.
 """
 from openshow import sig
+from openshow import timer
+from twisted.internet import reactor
 
 AUTO_CONTINUE = "auto-continue"
 AUTO_FOLLOW = "auto-follow"
@@ -27,6 +29,80 @@ class Cue(object):
         self._post_wait = post_wait
         self._title = title
         self._continue = AUTO_CONTINUE
+        self._delayed_call_pre_wait  = None
+        self._delayed_call_post_wait = None
+        self._timer_pre_wait = timer.Timer()
+        self._timer_post_wait = timer.Timer()
+
+        # Public attributes:
+        self.signal_go = sig.Signal() # param: self
+        self.signal_done_trigger = sig.Signal() # param: self
+        self.signal_done_pre_wait = sig.Signal() # param: self
+        self.signal_done_post_wait = sig.Signal() # param: self
+        self.signal_cancelled = sig.Signal() # param: self
+
+    def go(self):
+        self.signal_go(self)
+        self._timer_pre_wait.reset()
+        if self._pre_wait == 0.0:
+            self._do_trigger()
+        else:
+            self._delayed_call_pre_wait = reactor.callLater(self._pre_wait,
+                    self._do_trigger)
+
+    def cancel(self):
+        if self._delayed_call_pre_wait is not None:
+            self._delayed_call_pre_wait.cancel()
+        if self._delayed_call_post_wait is not None:
+            self._delayed_call_post_wait.cancel()
+        self.signal_cancelled(self)
+
+    def _do_trigger(self):
+        self.signal_done_pre_wait(self)
+        self.trigger()
+        self._delayed_call_pre_wait = None
+        self._timer_post_wait.reset()
+        if self._post_wait == 0.0:
+            self._done_post_wait()
+        else:
+            self._delayed_call_post_wait = reactor.callLater(self._post_wait,
+                    self._done_post_wait)
+
+    def get_elapsed_pre_wait(self):
+        """
+        @rtype: C{float}
+        """
+        if self.is_pre_waiting():
+            return self._timer_pre_wait.elapsed()
+        else:
+            print("pre-wait is not running")
+            return 0.0
+
+    def get_elapsed_post_wait(self):
+        """
+        @rtype: C{float}
+        """
+        if self.is_post_waiting():
+            return self._timer_post_wait.elapsed()
+        else:
+            print("post-wait is not running")
+            return 0.0
+
+    def is_pre_waiting(self):
+        """
+        @rtype: C{bool}
+        """
+        return self._delayed_call_pre_wait is not None
+
+    def is_post_waiting(self):
+        """
+        @rtype: C{bool}
+        """
+        return self._delayed_call_post_wait is not None
+
+    def _done_post_wait(self):
+        self.signal_done_post_wait(self)
+        self._delayed_call_post_wait = None
 
     def __str__(self):
         return "Cue(\"%s\" %s %s)" % (self._identifier, self._pre_wait,
@@ -63,6 +139,9 @@ class Cue(object):
         self._continue = value
 
     def trigger(self):
+        """
+        @rtype: L{twisted.internet.defer.Deferred}
+        """
         raise NotImplementedError("Must be implemented in child classes.")
 
 # TODO: add from_xml(node)
@@ -117,7 +196,11 @@ class OscCue(Cue):
         self._args = value
 
     def trigger(self):
-        raise NotImplementedError("TODO")
+        """
+        @rtype: L{twisted.internet.defer.Deferred}
+        """
+        # raise NotImplementedError("TODO")
+        print("OscCue.trigger: TODO")
 
 
 class CueSheet(object):
