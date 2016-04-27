@@ -11,11 +11,9 @@ import os
 from openshow import cue
 
 
-class Project(object):
+class ProjectPersistance(object):
     """
-    Project cue list.
-
-    Loads the list of cues to play.
+    Loads/saves the list of cues to play.
     """
     def __init__(self):
         self._project_file_path = ""
@@ -23,17 +21,24 @@ class Project(object):
 
     def parse_project_file(self, project_file_path):
         """
-        Make sure to set_screen_identifier first.
+        Loads a cue sheet from a project file.
+
+        Saves that path for later use - in case you want to save the project.
+        Returns a cue sheet.
+
         Make sure the config_file_path exists.
-        :raise: RuntimeError
+        @raise: RuntimeError
+        @return: L{openshow.cue.CueSheet}
         """
+        cue_sheet = cue.CueSheet()
         if not os.path.exists(project_file_path):
             raise RuntimeError("Project file does not exist: %s." % (
                     project_file_path))
         self._project_file_path = project_file_path
         doc = minidom.parse(self._project_file_path)
         cues = self._parse_cues(doc)
-        self._cue_sheet.set_cues(cues)
+        cue_sheet.set_cues(cues)
+        return cue_sheet
 
     def _parse_cues(self, doc):
         """
@@ -75,12 +80,9 @@ class Project(object):
                         _path, _args)
                 ret.append(_cue)
         return ret
-
-    def get_cue_sheet(self):
-        """
-        @rtype: L{openshow.cue.CueSheet}
-        """
-        return self._cue_sheet
+    
+    def save_to_project_file(self, cue_sheet, project_file_path=None):
+        raise NotImplementedError("To do")
 
 
 if __name__ == "__main__":
@@ -90,9 +92,9 @@ if __name__ == "__main__":
         project_file_path = sys.argv[1]
     except IndexError:
         print("Usage: %s <XML file path>" % (sys.argv[0]))
-    config = Project()
-    config.parse_project_file(project_file_path)
-    cues = config.get_cue_sheet().get_cues()
+    project = ProjectPersistance()
+    cue_sheet = project.parse_project_file(project_file_path)
+    cues = cue_sheet.get_cues()
     if len(cues) == 0:
         print("No cue")
     else:
