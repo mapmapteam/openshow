@@ -71,11 +71,13 @@ class TestCue(unittest.TestCase):
 
         # TODO: test trigger.
 
+
 class TestCueSheet(unittest.TestCase):
     def test_01_cue_sheet(self):
         cue_sheet = cue.CueSheet()
 
         cues = [
+                # identifier, pre-wait, post-wait
                 cue.OscCue("1", 0.0, 1.0, #FIXME: title
                         "localhost", 10000, "/path", []),
                 cue.OscCue("1", 0.0, 1.0, #FIXME: title
@@ -84,4 +86,4 @@ class TestCueSheet(unittest.TestCase):
         cue_sheet.set_cues(cues)
         # TODO
 
-    test_01_cue_sheet.skip = "To do"
+    # test_01_cue_sheet.skip = "To do"
