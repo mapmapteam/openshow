@@ -10,6 +10,7 @@ from twisted.internet import reactor
 import openshow
 from openshow import gui
 import sys
+import os
 import optparse
 
 def run():

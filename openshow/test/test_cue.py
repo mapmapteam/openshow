@@ -6,9 +6,10 @@ Test cases for openshow.cue
 from twisted.trial import unittest
 from twisted.internet import defer
 from openshow import cue
+from openshow.actions import osc
 
 class TestCue(unittest.TestCase):
-    def test_01_cue(self):
+    def test_01_cue_attributes(self):
         IDENTIFIER = "identifier"
         PRE_WAIT = 0.0
         POST_WAIT = 1.0
@@ -35,7 +36,11 @@ class TestCue(unittest.TestCase):
         self.failUnlessEqual(item.get_post_wait(), POST_WAIT)
         self.failUnlessEqual(item.get_title(), TITLE)
 
-    def test_02_osc_cue(self):
+    def test_02_action_execute(self):
+        action = cue.Action()
+        return action.execute()
+
+    def test_03_osc_action_attributes(self):
         IDENTIFIER = "identifier"
         PRE_WAIT = 0.0
         POST_WAIT = 1.0
@@ -45,29 +50,29 @@ class TestCue(unittest.TestCase):
         PATH = "/path"
         ARGS = ["hello", 2, 3.14159, True]
 
-        item = cue.OscCue(
-                IDENTIFIER, PRE_WAIT, POST_WAIT, #FIXME: TITLE
-                HOST, PORT, PATH, ARGS)
+        osc_cue = cue.Cue(IDENTIFIER, PRE_WAIT, POST_WAIT, TITLE)
+        osc_action = osc.OscAction(HOST, PORT, PATH, ARGS)
+        osc_cue.set_action(osc_action)
 
-        self.failUnlessEqual(item.get_host(), HOST)
-        self.failUnlessEqual(item.get_port(), PORT)
-        self.failUnlessEqual(item.get_path(), PATH)
-        self.failUnlessEqual(item.get_args(), ARGS)
+        self.failUnlessEqual(osc_action.get_host(), HOST)
+        self.failUnlessEqual(osc_action.get_port(), PORT)
+        self.failUnlessEqual(osc_action.get_path(), PATH)
+        self.failUnlessEqual(osc_action.get_args(), ARGS)
 
         HOST = "127.0.0.1"
         PORT = 11000
         PATH = "/other/path"
         ARGS = ["bye", 1, 1.618, False]
 
-        item.set_host(HOST)
-        item.set_port(PORT)
-        item.set_path(PATH)
-        item.set_args(ARGS)
+        osc_action.set_host(HOST)
+        osc_action.set_port(PORT)
+        osc_action.set_path(PATH)
+        osc_action.set_args(ARGS)
 
-        self.failUnlessEqual(item.get_host(), HOST)
-        self.failUnlessEqual(item.get_port(), PORT)
-        self.failUnlessEqual(item.get_path(), PATH)
-        self.failUnlessEqual(item.get_args(), ARGS)
+        self.failUnlessEqual(osc_action.get_host(), HOST)
+        self.failUnlessEqual(osc_action.get_port(), PORT)
+        self.failUnlessEqual(osc_action.get_path(), PATH)
+        self.failUnlessEqual(osc_action.get_args(), ARGS)
 
         # TODO: test trigger.
 
@@ -78,10 +83,10 @@ class TestCueSheet(unittest.TestCase):
 
         cues = [
                 # identifier, pre-wait, post-wait
-                cue.OscCue("1", 0.0, 1.0, #FIXME: title
-                        "localhost", 10000, "/path", []),
-                cue.OscCue("1", 0.0, 1.0, #FIXME: title
-                        "localhost", 10000, "/path", []),
+                cue.Cue("1", 0.0, 1.0, "title1",
+                        osc.OscAction("localhost", 10000, "/path", [])),
+                cue.Cue("2", 0.0, 1.0, "title2",
+                        osc.OscAction("localhost", 10000, "/path", [])),
         ]
         cue_sheet.set_cues(cues)
         # TODO

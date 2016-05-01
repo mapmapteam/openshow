@@ -5,6 +5,7 @@ A project contains cues. XML files are used to describe projects.
 """
 from openshow import sig
 from openshow import timer
+from twisted.internet import defer
 from twisted.internet import reactor
 
 AUTO_CONTINUE = "auto-continue"
@@ -23,7 +24,8 @@ class Cue(object):
     Cues can have a pre-wait delay, and a post-wait delay.
     Post-wait delay is only useful if in AUTO_CONTINUE continue mode.
     """
-    def __init__(self, identifier="", pre_wait=0.0, post_wait=0.0, title=""):
+    def __init__(self, identifier="", pre_wait=0.0, post_wait=0.0, title="",
+            action=None):
         self._identifier = identifier # or "Number"
         self._pre_wait = pre_wait
         self._post_wait = post_wait
@@ -33,6 +35,7 @@ class Cue(object):
         self._delayed_call_post_wait = None
         self._timer_pre_wait = timer.Timer()
         self._timer_post_wait = timer.Timer()
+        self._action = action
 
         # Public attributes:
         self.signal_go = sig.Signal() # param: self
@@ -40,6 +43,12 @@ class Cue(object):
         self.signal_done_pre_wait = sig.Signal() # param: self
         self.signal_done_post_wait = sig.Signal() # param: self
         self.signal_cancelled = sig.Signal() # param: self
+
+    def set_action(self, action):
+        self._action = action
+
+    def get_action(self):
+        return self._action
 
     def go(self):
         self.signal_go(self)
@@ -142,65 +151,24 @@ class Cue(object):
         """
         @rtype: L{twisted.internet.defer.Deferred}
         """
-        raise NotImplementedError("Must be implemented in child classes.")
+        if self._action is None:
+            return defer.succeed(None)
+        else:
+            return self._action.execute()
+
+
+class Action(object):
+    def __init__(self):
+        pass
+    
+    def execute(self):
+        return defer.succeed(None)
+
 
 # TODO: add from_xml(node)
 # TODO: add to_xml(node)
 
 
-# TODO: move to cuetypes/osc.py
-# TODO: add from_xml(node)
-# TODO: add to_xml(node)
-class OscCue(Cue):
-    """
-    OpenSoundControl cue.
-    """
-    def __init__(self, identifier="", pre_wait=0.0, post_wait=0.0,
-            host="localhost", port=31337, path="/default", args=[]):
-        super(OscCue, self).__init__(identifier, pre_wait, post_wait)
-        self.set_title(path)
-        # Attributes:
-        self._host = host
-        self._port = port
-        self._path = path
-        self._args = args
-
-    def __str__(self):
-        return "OscCue(\"%s\" %s %s %s %s)" % (self._identifier, self._host,
-                self._port, self._path, self._args)
-
-    def get_host(self):
-        return self._host
-
-    def get_port(self):
-        return self._port
-
-    def get_path(self):
-        return self._path
-
-    def get_args(self):
-        return self._args
-
-    def set_host(self, value):
-        self._host = str(value)
-
-    def set_port(self, value):
-        self._port = int(value)
-
-    def set_path(self, value):
-        self._path = str(value)
-
-    def set_args(self, value):
-        if type(value) != list:
-            value = [value]
-        self._args = value
-
-    def trigger(self):
-        """
-        @rtype: L{twisted.internet.defer.Deferred}
-        """
-        # raise NotImplementedError("TODO")
-        print("OscCue.trigger: TODO")
 
 
 class CueSheet(object):
