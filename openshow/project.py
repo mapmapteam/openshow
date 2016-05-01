@@ -9,6 +9,7 @@ Usage:
 from xml.dom import minidom
 import os
 from openshow import cue
+from openshow.actions import osc
 
 
 class ProjectPersistance(object):
@@ -50,6 +51,7 @@ class ProjectPersistance(object):
             # Parse its attributes
             _identifier = None
             _type = "osc" # default
+            _title = "<no title>" # default
             _pre_wait = 0.0
             _post_wait = 0.0
             if cue_element.hasAttribute("type"):
@@ -60,6 +62,8 @@ class ProjectPersistance(object):
                 _pre_wait = cue_element.getAttribute("pre_wait")
             if cue_element.hasAttribute("post_wait"):
                 _post_wait = cue_element.getAttribute("post_wait")
+            if cue_element.hasAttribute("title"):
+                _title = cue_element.getAttribute("title")
             if _type == "osc":
                 _host = "localhost"
                 _port = 31337
@@ -76,8 +80,8 @@ class ProjectPersistance(object):
                     _path = cue_element.getAttribute("path")
                 if cue_element.hasAttribute("args"):
                     _args = cue_element.getAttribute("args")
-                _cue = cue.OscCue(_identifier, _pre_wait, _post_wait, _host, _port,
-                        _path, _args)
+                _cue = cue.Cue(_identifier, _pre_wait, _post_wait, _title,
+                        osc.OscAction(_host, _port, _path, _args))
                 ret.append(_cue)
         return ret
     

@@ -114,8 +114,8 @@ class Cue(object):
         self._delayed_call_post_wait = None
 
     def __str__(self):
-        return "Cue(\"%s\" %s %s)" % (self._identifier, self._pre_wait,
-                self._post_wait)
+        return "Cue(\"%s\" \"%s\" %s %s): %s" % (self._identifier, self._title,
+                self._pre_wait, self._post_wait, self._action)
 
     def get_identifier(self):
         return self._identifier
@@ -167,8 +167,6 @@ class Action(object):
 
 # TODO: add from_xml(node)
 # TODO: add to_xml(node)
-
-
 
 
 class CueSheet(object):
