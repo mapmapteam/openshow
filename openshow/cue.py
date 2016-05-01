@@ -202,22 +202,84 @@ class CueSheet(object):
     """
     def __init__(self):
         self._cues = []
-        self._active_index = 0
+        # self._selected_index = 0
+        self._selected_identifier = ""
+        self._is_running = False
 
-    def get_active_cue_index(self):
+    def go(self):
         """
-        Returns the index of the current active cue.
+        @rtype: L{twisted.internet.defer.Deferred}
+        """
+        identifier = self.get_selected_cue_identifier()
+        _cue = self.get_cue_by_identifier(identifier)
+        self._go_cue(_cue)
+
+    @defer.inlineCallbacks
+    def _go_cue(self, cue_item):
+        # TODO: use the signals, not the deferreds, in order to trigger next
+        yield cue_item.go()
+        next_cue = self.get_cue_after(cue_item.get_identifier())
+        self._go_cue(next_cue)
+
+    def stop(self):
+        if self._is_running:
+            self._is_running = False
+            for _cue in self._cues:
+                _cue.cancel()
+
+    def get_selected_cue_index(self):
+        """
+        Returns the index of the current selected cue.
         @rtype value: C{int}
         """
-        return self._active_index
+        identifier = self.get_selected_cue_identifier()
+        if identifier == "":
+            return -1
+        else:
+            return self.get_cue_index(identifier)
 
-    def select_next_cue(self):
+    def get_selected_cue_identifier(self):
         """
-        Selects the next cue after the active one.
+        Returns the identifier of the current selected cue.
+        @rtype value: C{str}
+        """
+        if self._selected_identifier == "":
+            return "" # FIXME
+        return self._selected_identifier
+    
+    def rename_cue(self, identifier, new_identifier):
+        raise NotImplementedError("TODO")
+        return False
+
+    def select_cue(self, identifier):
+        raise NotImplementedError("TODO")
+
+    def get_cue_after(self, identifier):
+        index = self.get_cue_index(identifier)
+        if index < self.get_size():
+            index = index + 1
+            next_cue = self.get_cue_by_index(index)
+            return next_cue
+        else:
+            # print("No more cues.")
+            return None
+
+    def get_cue_before(self, identifier):
+        raise NotImplementedError("TODO")
+
+    def generate_name_for_cue_after(self, identifier):
+        raise NotImplementedError("TODO")
+
+    def _select_next_cue(self):
+        """
+        Selects the next cue after the current one.
         @rtype value: C{bool}
         """
-        if self._active_index < self.get_size():
-            self._active_index = self._active_index + 1
+        selected_index = self.get_selected_cue_index()
+        if selected_index < self.get_size():
+            selected_index = selected_index + 1
+            item = self.get_cue_by_index(selected_index)
+            self.select_cue(item.get_identifier())
             return True
         else:
             # print("No more cues.")
@@ -228,7 +290,9 @@ class CueSheet(object):
         @param cues: Dict of cues.
         @type cues: C{list}
         """
-        self._cues = cues
+        for item in cues:
+            self.append_cue(item)
+        # self._cues = cues
 
     def get_cues(self):
         """
@@ -241,7 +305,17 @@ class CueSheet(object):
         @param identifier: Number/identifier for the cue.
         @type value: L{Cue}
         """
+        was_empty = False
+        if len(self._cues) == 0:
+            was_empty = True
         self._cues.append(value)
+        if was_empty:
+            self._selected_identifier = value.get_identifier()
+
+    def insert_cue(self, value):
+        # TODO: check current selected cue and change it accordingly
+        # TODO: check if identifier already exists
+        raise NotImplementedError("TODO")
 
     def get_cue_by_identifier(self, identifier):
         """
@@ -256,6 +330,29 @@ class CueSheet(object):
                 return _cue
         raise RuntimeError("No such cue %s" % (identifier))
         # return None
+
+    def get_cue_index(self, identifier):
+        """
+        Returns the index of a cue, given its identifier.
+        @rtype: C{int}
+        @raise: RuntimeError
+        @type identifier: C{str}
+        """
+        for i in range(len(self._cues)):
+            _cue = self._cues[i]
+            if _cue.get_identifier() == identifier:
+                return i
+        raise RuntimeError("No such cue %s" % (identifier))
+
+    def has_cue(self, identifier):
+        """
+        @rtype: C{bool}
+        """
+        try:
+            self.get_cue_by_identifier(identifier)
+            return True
+        except RuntimeError:
+            return False
     
     def get_size(self):
         """
@@ -274,3 +371,6 @@ class CueSheet(object):
             raise RuntimeError("No cue for index %s" % (index))
         else:
             return self._cues[index]
+
+    def is_running(self):
+        return self._is_running
