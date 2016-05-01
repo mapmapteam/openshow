@@ -98,11 +98,13 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT, self._list_begin_label_edit_cb,
                 self._widget_list_ctrl)
 
-        self._widget_list_ctrl.Bind(wx.EVT_LEFT_DCLICK, self._list_left_double_click_cb)
+        self._widget_list_ctrl.Bind(wx.EVT_LEFT_DCLICK,
+                self._list_left_double_click_cb)
         self._widget_list_ctrl.Bind(wx.EVT_RIGHT_DOWN, self._list_right_down_cb)
 
         # for wxMSW
-        self._widget_list_ctrl.Bind(wx.EVT_COMMAND_RIGHT_CLICK, self._list_right_click_cb)
+        self._widget_list_ctrl.Bind(wx.EVT_COMMAND_RIGHT_CLICK,
+                self._list_right_click_cb)
         # for wxGTK
         self._widget_list_ctrl.Bind(wx.EVT_RIGHT_UP, self._list_right_click_cb)
 
@@ -235,13 +237,13 @@ class MainFrame(wx.Frame):
         self._widget_list_ctrl.InsertColumn(5, "Pre-Wait")
         self._widget_list_ctrl.InsertColumn(6, "Post-Wait")
 
-        self._widget_list_ctrl.SetColumnWidth(0, wx.LIST_AUTOSIZE)
-        self._widget_list_ctrl.SetColumnWidth(1, wx.LIST_AUTOSIZE)
-        self._widget_list_ctrl.SetColumnWidth(2, wx.LIST_AUTOSIZE)
-        self._widget_list_ctrl.SetColumnWidth(3, wx.LIST_AUTOSIZE)
-        self._widget_list_ctrl.SetColumnWidth(4, wx.LIST_AUTOSIZE)
-        self._widget_list_ctrl.SetColumnWidth(5, wx.LIST_AUTOSIZE)
-        self._widget_list_ctrl.SetColumnWidth(6, wx.LIST_AUTOSIZE)
+        self._widget_list_ctrl.SetColumnWidth(0, wx.LIST_AUTOSIZE_USEHEADER)
+        self._widget_list_ctrl.SetColumnWidth(1, wx.LIST_AUTOSIZE_USEHEADER)
+        self._widget_list_ctrl.SetColumnWidth(2, wx.LIST_AUTOSIZE_USEHEADER)
+        self._widget_list_ctrl.SetColumnWidth(3, wx.LIST_AUTOSIZE_USEHEADER)
+        self._widget_list_ctrl.SetColumnWidth(4, wx.LIST_AUTOSIZE_USEHEADER)
+        self._widget_list_ctrl.SetColumnWidth(5, wx.LIST_AUTOSIZE_USEHEADER)
+        self._widget_list_ctrl.SetColumnWidth(6, wx.LIST_AUTOSIZE_USEHEADER)
 
     def _populate_list_ctrl(self):
         self._create_list_columns()
