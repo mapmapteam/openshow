@@ -80,6 +80,7 @@ class Cue(object):
             self._delayed_call_post_wait.cancel()
         if self._callback_deferred is not None:
             self.signal_cancelled(self)
+            done_normally = False
             self._callback_deferred(done_normally)
             self._callback_deferred = None
 
@@ -137,7 +138,7 @@ class Cue(object):
         self._callback_deferred()
 
     def _callback_deferred(self, done_normally=True):
-        self._deferred.callback(self)
+        self._deferred.callback(done_normally)
 
     def __str__(self):
         return "Cue(\"%s\" \"%s\" %s %s): %s" % (self._identifier, self._title,

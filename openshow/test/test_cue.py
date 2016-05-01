@@ -9,6 +9,14 @@ from openshow import cue
 from openshow import timer
 from openshow.actions import osc
 
+class DummyAction(object):
+    def __init__(self):
+        self.executed = False
+    
+    def execute(self):
+        self.executed = True
+        return defer.succeed(None)
+
 class TestCue(unittest.TestCase):
     def test_01_cue_attributes(self):
         IDENTIFIER = "identifier"
@@ -79,27 +87,28 @@ class TestCue(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_03_cue_waits_and_execute(self):
-
-        class DummyAction(object):
-            def __init__(self):
-                self.executed = False
-            
-            def execute(self):
-                self.executed = True
-                return defer.succeed(None)
-
-        IDENTIFIER = "identifier"
-        PRE_WAIT = 1.0
-        POST_WAIT = 1.0
-        TITLE = "title"
-
         _action = DummyAction()
-        _cue = cue.Cue(IDENTIFIER, PRE_WAIT, POST_WAIT, TITLE, _action)
+        _cue = cue.Cue("1", 1.0, 1.0, "title", _action)
         _timer = timer.Timer()
         result = yield _cue.go()
         elapsed = _timer.elapsed()
         self.assertAlmostEqual(elapsed, 2.0, places=2)
         self.assertEqual(_action.executed, True)
+
+    def test_04_cancel_cue(self):
+        _action = DummyAction()
+        _cue = cue.Cue("1", 1.0, 1.0, "title", _action)
+        _timer = timer.Timer()
+        d = _cue.go()
+
+        def _cb(result):
+            self.assertEqual(_action.executed, False)
+            self.assertEqual(result, False)
+
+        d.addCallback(_cb)
+        _cue.cancel()
+        return d
+
 
 class TestCueSheet(unittest.TestCase):
     def test_01_cue_sheet_cues(self):
