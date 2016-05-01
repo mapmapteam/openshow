@@ -78,7 +78,7 @@ class TestCue(unittest.TestCase):
 
 
 class TestCueSheet(unittest.TestCase):
-    def test_01_cue_sheet(self):
+    def test_01_cue_sheet_cues(self):
         cue_sheet = cue.CueSheet()
 
         cues = [
@@ -89,6 +89,14 @@ class TestCueSheet(unittest.TestCase):
                         osc.OscAction("localhost", 10000, "/path", [])),
         ]
         cue_sheet.set_cues(cues)
-        # TODO
+        _cue = cue_sheet.get_cue_by_index(0)
+        self.failUnlessEqual(_cue.get_identifier(), cues[0].get_identifier())
 
-    # test_01_cue_sheet.skip = "To do"
+        _cue = cue_sheet.get_cue_by_identifier("1")
+        self.failUnlessEqual(_cue.get_identifier(), cues[0].get_identifier())
+
+        _size = cue_sheet.get_size()
+        self.failUnlessEqual(_size, 2)
+
+        cue_sheet.append_cue(cue.Cue("3", 0.0, 1.0, "title3",
+                osc.OscAction("localhost", 10000, "/path", [])))
