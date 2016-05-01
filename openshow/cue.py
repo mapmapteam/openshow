@@ -27,6 +27,7 @@ class Cue(object):
     def __init__(self, identifier="", pre_wait=0.0, post_wait=0.0, title="",
             action=None):
         self._identifier = identifier # or "Number"
+        self._deferred = None
         self._pre_wait = pre_wait
         self._post_wait = post_wait
         self._title = title
@@ -48,27 +49,48 @@ class Cue(object):
         self._action = action
 
     def get_action(self):
+        """
+        @rtype: L{openshow.cue.Action}
+        """
         return self._action
 
     def go(self):
+        """
+        Starts the pre-wait timer, then execute its actions,
+        and then starts the post-wait timer.
+
+        @return: A Deferred whose result is True if done normally,
+        False if cancelled.
+        @rtype: L{twisted.internet.defer.Deferred}
+        """
+        self._deferred = defer.Deferred()
         self.signal_go(self)
         self._timer_pre_wait.reset()
         if self._pre_wait == 0.0:
-            self._do_trigger()
+            self._do_after_pre_wait()
         else:
             self._delayed_call_pre_wait = reactor.callLater(self._pre_wait,
-                    self._do_trigger)
+                    self._do_after_pre_wait)
+        return self._deferred
 
     def cancel(self):
         if self._delayed_call_pre_wait is not None:
             self._delayed_call_pre_wait.cancel()
         if self._delayed_call_post_wait is not None:
             self._delayed_call_post_wait.cancel()
-        self.signal_cancelled(self)
+        if self._callback_deferred is not None:
+            self.signal_cancelled(self)
+            self._callback_deferred(done_normally)
+            self._callback_deferred = None
 
-    def _do_trigger(self):
+    @defer.inlineCallbacks
+    def _do_after_pre_wait(self):
+        """
+        After the pre_wait (if any)
+        Executes its actions.
+        """
         self.signal_done_pre_wait(self)
-        self.trigger()
+        yield self._do_execute()
         self._delayed_call_pre_wait = None
         self._timer_post_wait.reset()
         if self._post_wait == 0.0:
@@ -112,6 +134,10 @@ class Cue(object):
     def _done_post_wait(self):
         self.signal_done_post_wait(self)
         self._delayed_call_post_wait = None
+        self._callback_deferred()
+
+    def _callback_deferred(self, done_normally=True):
+        self._deferred.callback(self)
 
     def __str__(self):
         return "Cue(\"%s\" \"%s\" %s %s): %s" % (self._identifier, self._title,
@@ -147,7 +173,7 @@ class Cue(object):
     def set_continue(self, value):
         self._continue = value
 
-    def trigger(self):
+    def _do_execute(self):
         """
         @rtype: L{twisted.internet.defer.Deferred}
         """
