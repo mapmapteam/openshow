@@ -3,6 +3,25 @@
 The Timer class.
 """
 import time
+from twisted.internet import reactor
+from twisted.internet import defer
+
+
+def later(delay):
+    """
+    Returns a Deferred that fires after a given delay.
+
+    @param delay: Duration in seconds.
+    @type delay: C{float}
+    @rtype: L{twisted.internet.defer.Deferred}
+    """
+    ret = defer.Deferred()
+
+    def _callable(ret):
+        ret.callback(None)
+
+    delayed_call = reactor.callLater(delay, _callable, ret)
+    return ret
 
 
 class Timer(object):
