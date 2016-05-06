@@ -49,42 +49,31 @@ class ProjectPersistance(object):
         cue_elements = doc.getElementsByTagName("cue")
         for cue_element in cue_elements:
             # Parse its attributes
-            _identifier = None
-            _type = "osc" # default
-            _title = "<no title>" # default
-            _pre_wait = 0.0
-            _post_wait = 0.0
-            if cue_element.hasAttribute("type"):
-                _type = cue_element.getAttribute("type")
-            if cue_element.hasAttribute("identifier"):
-                _identifier = cue_element.getAttribute("identifier")
-            if cue_element.hasAttribute("pre_wait"):
-                _pre_wait = cue_element.getAttribute("pre_wait")
-            if cue_element.hasAttribute("post_wait"):
-                _post_wait = cue_element.getAttribute("post_wait")
-            if cue_element.hasAttribute("title"):
-                _title = cue_element.getAttribute("title")
-            if _type == "osc":
-                _host = "localhost"
-                _port = 31337
-                _path = "/default"
-                _args = []
-                if cue_element.hasAttribute("host"):
-                    _host = cue_element.getAttribute("host")
-                if cue_element.hasAttribute("port"):
-                    try:
-                        _port = int(cue_element.getAttribute("port"))
-                    except ValueError, e:
-                        print("Error parsing int for OSC port: %s" % (e))
-                if cue_element.hasAttribute("path"):
-                    _path = cue_element.getAttribute("path")
-                if cue_element.hasAttribute("args"):
-                    _args = cue_element.getAttribute("args")
-                _cue = cue.Cue(_identifier, _pre_wait, _post_wait, _title,
-                        osc.OscAction(_host, _port, _path, _args))
-                ret.append(_cue)
+            _identifier = self._parse_attribute(cue_element, "identifier")
+            _title = self._parse_attribute(cue_element, "title", "<no title>")
+            _pre_wait = self._parse_attribute(cue_element, "pre_wait", 0.0)
+            _post_wait = self._parse_attribute(cue_element, "post_wait", 0.0)
+
+            actions = cue_element.getElementsByTagName("action")
+            action_element = actions[0]
+            _action_type = self._parse_attribute(action_element, "type", "osc")
+            action = osc.OscAction()
+            attributes = action_element.getElementsByTagName("attr")
+            for attr in attributes:
+                name = self._parse_attribute(attr, "name")
+                value = self._parse_attribute(attr, "value")
+                action.set_attribute(name, value)
+
+            _cue = cue.Cue(_identifier, _pre_wait, _post_wait, _title, action);
+            ret.append(_cue)
         return ret
-    
+
+    def _parse_attribute(self, element, attribute, default=None):
+      if element.hasAttribute(attribute):
+          return element.getAttribute(attribute)
+      else:
+          return default
+
     def save_to_project_file(self, cue_sheet, project_file_path=None):
         raise NotImplementedError("To do")
 

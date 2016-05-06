@@ -32,7 +32,7 @@ def send_async_tcp(message, port, host):
     client = async.ClientFactory()
     _client_port = None
     d = defer.Deferred()
-    
+
     def _callback(result):
         # print("Connected.")
         client.send(message)
@@ -80,42 +80,46 @@ class OscAction(cue.Action):
     OpenSoundControl action.
     """
     def __init__(self, host="localhost", port=31337, path="/default", args=[]):
-        super(cue.Action, self).__init__()
+        super(OscAction, self).__init__()
         # Attributes:
-        self._host = host
-        self._port = port
-        self._path = path
-        self._args = args
+        self._add_attribute("host", host)
+        self._add_attribute("port", port)
+        self._add_attribute("path", path)
+        self._add_attribute("args", args)
 
     def __str__(self):
         return "%s(%s %s %s %s)" % (self.__class__.__name__,
-                self._host, self._port, self._path, self._args)
+                self.get_host(), self.get_port(), self.get_path(), self.get_args())
 
     def get_host(self):
-        return self._host
+        return self.get_attribute("host")
 
     def get_port(self):
-        return self._port
+        return self.get_attribute("port")
 
     def get_path(self):
-        return self._path
+        return self.get_attribute("path")
 
     def get_args(self):
-        return self._args
+        return self.get_attribute("args")
 
     def set_host(self, value):
-        self._host = str(value)
+        self.set_attribute("host", str(value))
 
     def set_port(self, value):
-        self._port = int(value)
+        self.set_attribute("port", int(value))
 
     def set_path(self, value):
-        self._path = str(value)
+        self.set_attribute("path", str(value))
 
     def set_args(self, value):
         if type(value) != list:
             value = [value]
-        self._args = value
+        self.set_attribute("args", value)
+
+    # Override
+    def get_type(self):
+        return "osc"
 
     @defer.inlineCallbacks
     def execute(self):

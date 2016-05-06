@@ -188,12 +188,26 @@ class Cue(object):
 
 class Action(object):
     def __init__(self):
-        pass
-    
+        self._attributes = {}
+
     def execute(self):
         return defer.succeed(None)
 
+    def set_attribute(self, name, value):
+        self._attributes[name] = value
 
+    def get_attribute(self, name):
+        return self._attributes[name]
+
+    def has_attribute(self, name):
+        return name in self._attributes
+
+    # TODO: add type support
+    def _add_attribute(self, name, default):
+        self.set_attribute(name, default)
+
+    def get_type(self):
+        return None
 # TODO: add from_xml(node)
 # TODO: add to_xml(node)
 
@@ -249,7 +263,7 @@ class CueSheet(object):
         if self._selected_identifier == "":
             return "" # FIXME
         return self._selected_identifier
-    
+
     def rename_cue(self, identifier, new_identifier):
         raise NotImplementedError("TODO")
         return False
@@ -359,13 +373,13 @@ class CueSheet(object):
             return True
         except RuntimeError:
             return False
-    
+
     def get_size(self):
         """
         @rtype: C{int}
         """
         return len(self._cues)
-    
+
     def get_cue_by_index(self, index):
         """
         Get cue by index.

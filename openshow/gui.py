@@ -63,6 +63,7 @@ class MainFrame(wx.Frame):
 
         self.SetSizer(sizer)
         self.SetAutoLayout(True)
+        self._columns_created = False
         self._cue_sheet = cue.CueSheet()
         self._current_item = 0 # Do this before _populate_list_ctrl
         self._populate_list_ctrl()
@@ -236,21 +237,20 @@ class MainFrame(wx.Frame):
         # menu.Destroy()
 
     def _create_list_columns(self):
-        self._widget_list_ctrl.InsertColumn(0, "Number")
-        self._widget_list_ctrl.InsertColumn(1, "Host")
-        self._widget_list_ctrl.InsertColumn(2, "Port", wx.LIST_FORMAT_RIGHT)
-        self._widget_list_ctrl.InsertColumn(3, "Path")
-        self._widget_list_ctrl.InsertColumn(4, "Arguments")
-        self._widget_list_ctrl.InsertColumn(5, "Pre-Wait")
-        self._widget_list_ctrl.InsertColumn(6, "Post-Wait")
+        if not self._columns_created:
+            self._widget_list_ctrl.InsertColumn(0, "ID")
+            self._widget_list_ctrl.InsertColumn(1, "Title")
+            self._widget_list_ctrl.InsertColumn(2, "Pre-Wait")
+            self._widget_list_ctrl.InsertColumn(3, "Post-Wait")
+            self._widget_list_ctrl.InsertColumn(4, "Type")
+            self._widget_list_ctrl.InsertColumn(5, "Action")
 
-        self._widget_list_ctrl.SetColumnWidth(0, wx.LIST_AUTOSIZE_USEHEADER)
-        self._widget_list_ctrl.SetColumnWidth(1, wx.LIST_AUTOSIZE_USEHEADER)
-        self._widget_list_ctrl.SetColumnWidth(2, wx.LIST_AUTOSIZE_USEHEADER)
-        self._widget_list_ctrl.SetColumnWidth(3, wx.LIST_AUTOSIZE_USEHEADER)
-        self._widget_list_ctrl.SetColumnWidth(4, wx.LIST_AUTOSIZE_USEHEADER)
-        self._widget_list_ctrl.SetColumnWidth(5, wx.LIST_AUTOSIZE_USEHEADER)
-        self._widget_list_ctrl.SetColumnWidth(6, wx.LIST_AUTOSIZE_USEHEADER)
+            self._widget_list_ctrl.SetColumnWidth(0, wx.LIST_AUTOSIZE_USEHEADER)
+            self._widget_list_ctrl.SetColumnWidth(1, wx.LIST_AUTOSIZE_USEHEADER)
+            self._widget_list_ctrl.SetColumnWidth(2, wx.LIST_AUTOSIZE_USEHEADER)
+            self._widget_list_ctrl.SetColumnWidth(3, wx.LIST_AUTOSIZE_USEHEADER)
+            self._widget_list_ctrl.SetColumnWidth(4, wx.LIST_AUTOSIZE_USEHEADER)
+            self._widget_list_ctrl.SetColumnWidth(5, wx.LIST_AUTOSIZE_USEHEADER)
 
     def _populate_list_ctrl(self):
         self._create_list_columns()
@@ -258,12 +258,11 @@ class MainFrame(wx.Frame):
         for i in range(len(cues)):
             _cue = cues[i]
             self._widget_list_ctrl.InsertStringItem(i, _cue.get_identifier()) # sets columns 0
-            self._widget_list_ctrl.SetStringItem(i, 1, "XXY")
-            self._widget_list_ctrl.SetStringItem(i, 2, "PORTDUMMY")
-            self._widget_list_ctrl.SetStringItem(i, 3, "PATHDUMMY")
-            self._widget_list_ctrl.SetStringItem(i, 4, "ARGSDUMMY")
-            self._widget_list_ctrl.SetStringItem(i, 5, str(_cue.get_pre_wait()))
-            self._widget_list_ctrl.SetStringItem(i, 6, str(_cue.get_post_wait()))
+            self._widget_list_ctrl.SetStringItem(i, 1, _cue.get_title())
+            self._widget_list_ctrl.SetStringItem(i, 2, str(_cue.get_pre_wait()))
+            self._widget_list_ctrl.SetStringItem(i, 3, str(_cue.get_post_wait()))
+            self._widget_list_ctrl.SetStringItem(i, 4, _cue.get_action().get_type())
+            self._widget_list_ctrl.SetStringItem(i, 5, str(_cue.get_action()))
 
         # Select an item
         if self._cue_sheet.get_size() > 0:
