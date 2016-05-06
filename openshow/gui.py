@@ -70,9 +70,16 @@ class MainFrame(wx.Frame):
         self._bind_list_ctrl_event_callbacks()
 
     def load_cue_sheet(self, project_file_path):
-      self._cue_sheet = project.ProjectPersistance().parse_project_file(project_file_path)
-      self._current_item = 0 # Do this before _populate_list_ctrl
-      self._populate_list_ctrl()
+        self._cue_sheet = project.ProjectPersistance().parse_project_file(project_file_path)
+        self._cue_sheet.signal_sheet_selected_cue_changed.connect(self._cue_sheet_selected_cue_changed_cb)
+        self._current_item = 0 # Do this before _populate_list_ctrl
+        self._populate_list_ctrl()
+
+    def _cue_sheet_selected_cue_changed_cb(self, cue_item):
+        self._current_item = self._cue_sheet.get_cue_index(cue_item.get_identifier())
+        #item = self._widget_list_ctrl.GetItem(self._current_item)
+        self._widget_list_ctrl.Focus(self._current_item)
+        self._widget_list_ctrl.Select(self._current_item)
 
     def _exit_menu_cb(self, event):
         reactor.stop()
