@@ -18,7 +18,8 @@ def run():
     Parses the command line options and runs the application.
     """
     DEFAULT_OSC_RECEIVE_PORT = 13333
-    DEFAULT_PROJECT_FILE = "~/.openshow.xml"
+    # DEFAULT_PROJECT_FILE = "~/.openshow.xml"
+    DEFAULT_PROJECT_FILE = ""
 
     parser = optparse.OptionParser(usage="%prog",
             version=str(openshow.__version__))
@@ -50,11 +51,21 @@ def run():
 
     # register the App instance with Twisted:
     app = gui.App(0)
-
     reactor.registerWxApp(app)
-    def later():
+
+    def _later_load_file():
         app.get_frame().load_cue_sheet(project_file)
-    reactor.callLater(1, later)
+
+    if project_file == "":
+        if verbose:
+            print("No project file to load")
+    else:
+        if os.path.exists(project_file):
+            reactor.callLater(1, _later_load_file)
+        else:
+            print("Error: Project file %s does not exist" % (project_file))
+            sys.exit(1)
+
     # start the event loop:
     try:
         reactor.run()
