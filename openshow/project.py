@@ -60,9 +60,9 @@ class ProjectPersistance(object):
                 raise RuntimeError("Found " + len(actions_elements) + " actions, only one action supported.")
 
             # Create action.
-            action_element = actions[0]
+            action_element = actions_elements[0]
             _action_type = self._parse_attribute(action_element, "type", "osc")
-            if _action_type != "osc"
+            if _action_type != "osc":
                 raise RuntimeError("Only OSC actions supported for now, found '" + _action_type + "'.")
             action = osc.OscAction()
             attributes = action_element.getElementsByTagName("attr")
