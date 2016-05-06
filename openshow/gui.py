@@ -10,7 +10,8 @@ from twisted.internet import reactor
 import sys
 import wx
 import os
-
+from openshow import cue
+from openshow import project
 
 def show_open_file_dialog(parent):
     """
@@ -62,9 +63,15 @@ class MainFrame(wx.Frame):
 
         self.SetSizer(sizer)
         self.SetAutoLayout(True)
+        self._cue_sheet = cue.CueSheet()
         self._current_item = 0 # Do this before _populate_list_ctrl
         self._populate_list_ctrl()
         self._bind_list_ctrl_event_callbacks()
+
+    def load_cue_sheet(self, project_file_path):
+      self._cue_sheet = project.ProjectPersistance().parse_project_file(project_file_path)
+      self._current_item = 0 # Do this before _populate_list_ctrl
+      self._populate_list_ctrl()
 
     def _exit_menu_cb(self, event):
         reactor.stop()
@@ -247,30 +254,21 @@ class MainFrame(wx.Frame):
 
     def _populate_list_ctrl(self):
         self._create_list_columns()
-
-        values = [
-                ['1', 'localhost', 31337, '/spam', '123 3.14159 hello', 0.0, 0.0],
-                ['2', 'localhost', 31337, '/spam', '124 3.14159 hello', 0.0, 0.0],
-                ['3', 'localhost', 31337, '/spam', '125 3.14159 hello', 0.0, 0.0],
-                ['4', 'localhost', 31337, '/spam', '126 3.14159 hello', 0.0, 0.0],
-                ['4.5', 'localhost', 31337, '/spam', '127 3.14159 hello', 0.0, 0.0],
-                ['5', 'localhost', 31337, '/spam', '128 3.14159 hello', 0.0, 0.0],
-                ]
-        for i in range(len(values)):
-            value = values[i]
-            self._widget_list_ctrl.InsertStringItem(i, value[0]) # sets columns 0
-            self._widget_list_ctrl.SetStringItem(i, 1, value[1])
-            self._widget_list_ctrl.SetStringItem(i, 2, str(value[2]))
-            self._widget_list_ctrl.SetStringItem(i, 3, value[3])
-            self._widget_list_ctrl.SetStringItem(i, 4, value[4])
-            self._widget_list_ctrl.SetStringItem(i, 5, str(value[5]))
-            self._widget_list_ctrl.SetStringItem(i, 6, str(value[6]))
+        cues = self._cue_sheet.get_cues()
+        for i in range(len(cues)):
+            _cue = cues[i]
+            self._widget_list_ctrl.InsertStringItem(i, _cue.get_identifier()) # sets columns 0
+            self._widget_list_ctrl.SetStringItem(i, 1, "XXY")
+            self._widget_list_ctrl.SetStringItem(i, 2, "PORTDUMMY")
+            self._widget_list_ctrl.SetStringItem(i, 3, "PATHDUMMY")
+            self._widget_list_ctrl.SetStringItem(i, 4, "ARGSDUMMY")
+            self._widget_list_ctrl.SetStringItem(i, 5, str(_cue.get_pre_wait()))
+            self._widget_list_ctrl.SetStringItem(i, 6, str(_cue.get_post_wait()))
 
         # Select an item
-        self._widget_list_ctrl.SetItemState(0,
-                wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
+        if self._cue_sheet.get_size() > 0:
+          self._widget_list_ctrl.SetItemState(0, wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
         self._current_item = 0
-
 
 class App(wx.App):
     """
@@ -283,9 +281,12 @@ class App(wx.App):
         """
         Called when it's time to initialize this application.
         """
-        frame = MainFrame(None, -1, "Open Show")
-        frame.Show(True)
-        self.SetTopWindow(frame)
+        self._frame = MainFrame(None, -1, "Open Show")
+        self._frame.Show(True)
+        self.SetTopWindow(self._frame)
         # look, we can use twisted calls!
         reactor.callLater(2, self._call_later_cb)
         return True
+
+    def get_frame(self):
+      return self._frame
