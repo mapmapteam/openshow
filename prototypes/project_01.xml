@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<project loop="true">
+    <cue identifier="1" port="12345" path="/mapmap/media/load" args="0 ~/Videos/example_01.mov" post_wait="10.0"/>
+    <cue identifier="2" port="12345" path="/mapmap/media/load" args="0 ~/Videos/example_02.mov" pre_wait="1.0" post_wait="20.0"/>
+</project>
