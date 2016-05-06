@@ -13,6 +13,7 @@ import os
 from openshow import cue
 from openshow import project
 
+
 def show_open_file_dialog(parent):
     """
     Open a file.
@@ -65,18 +66,25 @@ class MainFrame(wx.Frame):
         self.SetAutoLayout(True)
         self._columns_created = False
         self._cue_sheet = cue.CueSheet()
+        self._connect_to_new_cue_sheet_signals()
         self._current_item = 0 # Do this before _populate_list_ctrl
         self._populate_list_ctrl()
         self._bind_list_ctrl_event_callbacks()
 
+    def _connect_to_new_cue_sheet_signals(self):
+        self._cue_sheet.signal_sheet_selected_cue_changed.connect(
+                self._cue_sheet_selected_cue_changed_cb)
+
     def load_cue_sheet(self, project_file_path):
-        self._cue_sheet = project.ProjectPersistance().parse_project_file(project_file_path)
-        self._cue_sheet.signal_sheet_selected_cue_changed.connect(self._cue_sheet_selected_cue_changed_cb)
+        self._cue_sheet = project.ProjectPersistance().parse_project_file(
+                project_file_path)
+        self._connect_to_new_cue_sheet_signals()
         self._current_item = 0 # Do this before _populate_list_ctrl
         self._populate_list_ctrl()
 
     def _cue_sheet_selected_cue_changed_cb(self, cue_item):
-        self._current_item = self._cue_sheet.get_cue_index(cue_item.get_identifier())
+        self._current_item = self._cue_sheet.get_cue_index(
+                cue_item.get_identifier())
         #item = self._widget_list_ctrl.GetItem(self._current_item)
         self._widget_list_ctrl.Focus(self._current_item)
         self._widget_list_ctrl.Select(self._current_item)
