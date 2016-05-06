@@ -273,9 +273,6 @@ class App(wx.App):
     """
     Our main application.
     """
-    def _call_later_cb(self):
-        print("two seconds passed")
-
     def OnInit(self):
         """
         Called when it's time to initialize this application.
@@ -283,8 +280,6 @@ class App(wx.App):
         self._frame = MainFrame(None, -1, "Open Show")
         self._frame.Show(True)
         self.SetTopWindow(self._frame)
-        # look, we can use twisted calls!
-        reactor.callLater(2, self._call_later_cb)
         return True
 
     def get_frame(self):
