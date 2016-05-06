@@ -50,7 +50,11 @@ def run():
 
     # register the App instance with Twisted:
     app = gui.App(0)
+
     reactor.registerWxApp(app)
+    def later():
+        app.get_frame().load_cue_sheet(project_file)
+    reactor.callLater(1, later)
     # start the event loop:
     try:
         reactor.run()
