@@ -208,27 +208,68 @@ class CueSheet(object):
         self._selected_identifier = ""
         self._is_running = False
 
+        # Public attributes:
+        # signals for this sheet:
+        self.signal_sheet_go = sig.Signal() # param: 
+        self.signal_sheet_stop = sig.Signal() # param:
+        self.signal_sheet_done = sig.Signal() # param:
+        self.signal_sheet_selected_cue_changed = sig.Signal() # param: cue
+        # signals for all its cues:
+        self.signal_cue_go = sig.Signal() # param: cue
+        self.signal_cue_done_trigger = sig.Signal() # param: cue
+        self.signal_cue_done_pre_wait = sig.Signal() # param: cue
+        self.signal_cue_done_post_wait = sig.Signal() # param: cue
+        self.signal_cue_cancelled = sig.Signal() # param: cue
+
     def go(self):
         """
         @rtype: L{twisted.internet.defer.Deferred}
         """
+        if self._is_running:
+            print("already running")
+            return defer.succeed(None)
+
+        if self.get_size() == 0:
+            print("this cue sheet contains no cues.")
+            return defer.succeed(None)
+
+        self._is_running = True
         identifier = self.get_selected_cue_identifier()
+        # FIXME: could be ""
+        # No need to do self.select_cue(identifier)
         _cue = self.get_cue_by_identifier(identifier)
-        self._go_cue(_cue)
+        d = self._go_cue(_cue) # FIXME: will this Deferred trigger when the
+        # cue sheet is done? I think so
+        self.signal_sheet_go()
+        return d
 
     @defer.inlineCallbacks
     def _go_cue(self, cue_item):
-        # TODO: use the signals, not the deferreds, in order to trigger next
+        """
+        Triggers a cue
+        """
+        # maybe use the signals, not the deferreds, in order to trigger next?
+        # well, I think it's simpler like this, in the end
         yield cue_item.go()
         next_cue = self.get_cue_after(cue_item.get_identifier())
-        if next_cue is not None:
-            self._go_cue(next_cue)
+        if next_cue is None:
+            self.signal_sheet_done()
+            self._is_running = False # we are done
+        else:
+            # Pretty tricky: recursive inlineCallbacks deferreds
+            # But it seems to work OK
+            self.select_cue(next_cue.get_identifier())
+            yield self._go_cue(next_cue)
 
     def stop(self):
+        """
+        triggers signal_sheet_stop
+        """
         if self._is_running:
             self._is_running = False
             for _cue in self._cues:
                 _cue.cancel()
+        self.signal_sheet_stop()
 
     def get_selected_cue_index(self):
         """
@@ -255,9 +296,20 @@ class CueSheet(object):
         return False
 
     def select_cue(self, identifier):
-        raise NotImplementedError("TODO")
+        """
+        Selects a cue.
+        """
+        if self.has_cue(identifier):
+            self._selected_identifier = identifier
+            self.signal_sheet_selected_cue_changed(identifier)
+        else:
+            raise RuntimeError("No such cue %s" % (identifier))
 
     def get_cue_after(self, identifier):
+        """
+        Get the cue after a given cue, or None.
+        @return: Cue or None
+        """
         index = self.get_cue_index(identifier)
         if index < self.get_size():
             index = index + 1
@@ -271,9 +323,11 @@ class CueSheet(object):
             return None
 
     def get_cue_before(self, identifier):
+        # do we really need this?
         raise NotImplementedError("TODO")
 
     def generate_name_for_cue_after(self, identifier):
+        # TODO
         raise NotImplementedError("TODO")
 
     def _select_next_cue(self):
@@ -318,7 +372,29 @@ class CueSheet(object):
         if was_empty:
             self._selected_identifier = value.get_identifier()
 
-    def insert_cue(self, value):
+        # register to its signals
+        value.signal_go.connect(self._cue_go_cb)
+        value.signal_done_trigger.connect(self._cue_done_trigger_cb)
+        value.signal_done_pre_wait.connect(self._cue_cancelled_cb)
+        value.signal_done_post_wait.connect(self._cue_cancelled_cb)
+        value.signal_cancelled.connect(self._cue_cancelled_cb)
+
+    def _cue_go_cb(self, cue_item):
+        self.signal_cue_go(cue_item)
+
+    def _cue_done_trigger_cb(self, cue_item):
+        self.signal_cue_done_trigger(cue_item)
+
+    def _cue_done_pre_wait(self, cue_item):
+        self.signal_cue_done_pre_wait(cue_item)
+
+    def _cue_done_post_wait_cb(self, cue_item):
+        self.signal_cue_done_post_wait(cue_item)
+
+    def _cue_cancelled_cb(self, cue_item):
+        self.signal_cue_cancelled(cue_item)
+
+    def insert_cue(self, index, value):
         # TODO: check current selected cue and change it accordingly
         # TODO: check if identifier already exists
         raise NotImplementedError("TODO")
@@ -359,6 +435,9 @@ class CueSheet(object):
             return True
         except RuntimeError:
             return False
+
+    def remove_cue(self, identifier):
+        raise NotImplementedError("TODO")
     
     def get_size(self):
         """
@@ -379,4 +458,7 @@ class CueSheet(object):
             return self._cues[index]
 
     def is_running(self):
+        """
+        @rtype: C{bool}
+        """
         return self._is_running
