@@ -17,6 +17,7 @@ class DummyAction(object):
         self.executed = True
         return defer.succeed(None)
 
+
 class TestCue(unittest.TestCase):
     def test_01_cue_attributes(self):
         IDENTIFIER = "identifier"
@@ -113,6 +114,7 @@ class TestCue(unittest.TestCase):
 class TestCueSheet(unittest.TestCase):
     def test_01_cue_sheet_cues(self):
         cue_sheet = cue.CueSheet()
+        _timer = timer.Timer()
 
         cues = [
                 # identifier, pre-wait, post-wait
@@ -133,3 +135,42 @@ class TestCueSheet(unittest.TestCase):
 
         cue_sheet.append_cue(cue.Cue("3", 0.0, 1.0, "title3",
                 osc.OscAction("localhost", 10000, "/path", [])))
+
+        _size = cue_sheet.get_size()
+        self.failUnlessEqual(_size, 3)
+
+    @defer.inlineCallbacks
+    def test_02_follow(self):
+        cue_sheet = cue.CueSheet()
+        _timer = timer.Timer()
+
+        cues = [
+                # identifier, pre-wait, post-wait
+                cue.Cue("1", 0.0, 1.0, "title1",
+                        DummyAction()),
+                cue.Cue("2", 0.0, 1.0, "title2",
+                        DummyAction()),
+                cue.Cue("3", 0.0, 1.0, "title3",
+                        DummyAction()),
+        ]
+        cue_sheet.set_cues(cues)
+        cue_sheet.go()
+
+        yield timer.later(0.1)
+        _action = cue_sheet.get_cue_by_identifier("1").get_action()
+        self.assertEqual(_action.executed, True)
+        _action = cue_sheet.get_cue_by_identifier("2").get_action()
+        self.assertEqual(_action.executed, False)
+        _action = cue_sheet.get_cue_by_identifier("3").get_action()
+        self.assertEqual(_action.executed, False)
+
+        yield timer.later(1.1)
+        _action = cue_sheet.get_cue_by_identifier("2").get_action()
+        self.assertEqual(_action.executed, True)
+        _action = cue_sheet.get_cue_by_identifier("3").get_action()
+        self.assertEqual(_action.executed, False)
+
+        yield timer.later(1.1)
+        _action = cue_sheet.get_cue_by_identifier("3").get_action()
+        self.assertEqual(_action.executed, True)
+        yield timer.later(1.1)
