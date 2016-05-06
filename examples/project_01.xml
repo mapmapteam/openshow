@@ -1,5 +1,19 @@
 <?xml version="1.0"?>
 <project loop="true">
-    <cue identifier="1" port="12345" path="/mapmap/media/load" args="0 ~/Videos/example_01.mov" post_wait="10.0"/>
-    <cue identifier="2" port="12345" path="/mapmap/media/load" args="0 ~/Videos/example_02.mov" post_wait="10.0"/>
+    <options>
+        <option name="default_osc_port" value="12345" />
+        <option name="default_osc_host" value="localhost" />
+    </options>
+    <cue identifier="1" title="Load media 1" pre_wait="0.0" post_wait="1.0">
+        <action type="osc">
+            <attr name="port" value="12345" />
+            <attr name="path" value="/mapmap/media/load ,s movie1.mov" />
+        </action>
+    </cue>
+    <cue identifier="2" title="Load media 2" pre_wait="0.0" post_wait="1.0">
+        <action type="osc">
+            <attr name="port" value="56789" />
+            <attr name="path" value="/mapmap/media/load ,s movie2.mov" />
+        </action>
+    </cue>
 </project>
