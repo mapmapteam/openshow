@@ -54,9 +54,16 @@ class ProjectPersistance(object):
             _pre_wait = self._parse_attribute(cue_element, "pre_wait", 0.0)
             _post_wait = self._parse_attribute(cue_element, "post_wait", 0.0)
 
-            actions = cue_element.getElementsByTagName("action")
+            # Extract action (for now only supports a single action)
+            actions_elements = cue_element.getElementsByTagName("action")
+            if (len(actions_elements) != 1):
+                raise RuntimeError("Found " + len(actions_elements) + " actions, only one action supported.")
+
+            # Create action.
             action_element = actions[0]
             _action_type = self._parse_attribute(action_element, "type", "osc")
+            if _action_type != "osc"
+                raise RuntimeError("Only OSC actions supported for now, found '" + _action_type + "'.")
             action = osc.OscAction()
             attributes = action_element.getElementsByTagName("attr")
             for attr in attributes:
