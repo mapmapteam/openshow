@@ -107,6 +107,7 @@ class Cue(object):
         if self.is_pre_waiting():
             return self._timer_pre_wait.elapsed()
         else:
+            # FIXME: return the total pre-wait if done
             print("pre-wait is not running")
             return 0.0
 
@@ -117,6 +118,7 @@ class Cue(object):
         if self.is_post_waiting():
             return self._timer_post_wait.elapsed()
         else:
+            # FIXME: return the total post-wait if done
             print("post-wait is not running")
             return 0.0
 
@@ -219,7 +221,8 @@ class CueSheet(object):
         # TODO: use the signals, not the deferreds, in order to trigger next
         yield cue_item.go()
         next_cue = self.get_cue_after(cue_item.get_identifier())
-        self._go_cue(next_cue)
+        if next_cue is not None:
+            self._go_cue(next_cue)
 
     def stop(self):
         if self._is_running:
@@ -258,8 +261,11 @@ class CueSheet(object):
         index = self.get_cue_index(identifier)
         if index < self.get_size():
             index = index + 1
-            next_cue = self.get_cue_by_index(index)
-            return next_cue
+            try:
+                next_cue = self.get_cue_by_index(index)
+                return next_cue
+            except RuntimeError:
+                return None
         else:
             # print("No more cues.")
             return None

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<project loop="true">
+    <options>
+        <option name="default_osc_port" value="12345" />
+        <option name="default_osc_host" value="localhost" />
+    </options>
+    <cue identifier="1" title="" pre_wait="0.0" post_wait="1.0">
+        <action type="osc">
+            <attr name="port" value="12345" />
+            <attr name="path" value="/mapmap/media/load ,ifs 123 3.14159 \"hello\"" />
+        </action>
+    </cue>
+</project>
