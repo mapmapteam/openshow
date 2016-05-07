@@ -31,7 +31,20 @@ def show_open_file_dialog(parent):
     return full_path
 
 
+def show_error_dialog(parent, message):
+    """
+    Error dialog.
+    """
+    # FIXME: improve this dialog - make it a real error one
+    dialog = wx.Dialog(parent, wx.NewId(), message)
+    dialog.ShowModal()
+    dialog.Destroy()
+
+
 class MainFrame(wx.Frame):
+    """
+    Main GUI window.
+    """
     def __init__(self, parent, ID, title):
         # ID_EXIT = wx.NewId() # 101
         wx.Frame.__init__(self, parent, ID, title, wx.DefaultPosition,
@@ -76,11 +89,15 @@ class MainFrame(wx.Frame):
                 self._cue_sheet_selected_cue_changed_cb)
 
     def load_cue_sheet(self, project_file_path):
-        self._cue_sheet = project.ProjectPersistance().parse_project_file(
-                project_file_path)
-        self._connect_to_new_cue_sheet_signals()
-        self._current_item = 0 # Do this before _populate_list_ctrl
-        self._populate_list_ctrl()
+        try:
+            self._cue_sheet = project.ProjectPersistance().parse_project_file(
+                    project_file_path)
+            self._connect_to_new_cue_sheet_signals()
+            self._current_item = 0 # Do this before _populate_list_ctrl
+            self._populate_list_ctrl()
+        except RuntimeError as e:
+            print(e)
+            show_error_dialog(self, str(e))
 
     def _cue_sheet_selected_cue_changed_cb(self, cue_item):
         self._current_item = self._cue_sheet.get_cue_index(
@@ -95,6 +112,10 @@ class MainFrame(wx.Frame):
     def _open_menu_cb(self, event):
         file_path = show_open_file_dialog(self)
         print("Chose file %s" % (file_path))
+        if file_path is None:
+            print("No file chosen")
+        else:
+            self.load_cue_sheet(file_path)
 
     def _go_button_cb(self, event):
         print("GO")
@@ -263,6 +284,7 @@ class MainFrame(wx.Frame):
             self._widget_list_ctrl.InsertColumn(4, "Type")
             self._widget_list_ctrl.InsertColumn(5, "Action")
 
+            # FIXME: column width is broken
             self._widget_list_ctrl.SetColumnWidth(0, wx.LIST_AUTOSIZE_USEHEADER)
             self._widget_list_ctrl.SetColumnWidth(1, wx.LIST_AUTOSIZE_USEHEADER)
             self._widget_list_ctrl.SetColumnWidth(2, wx.LIST_AUTOSIZE_USEHEADER)
