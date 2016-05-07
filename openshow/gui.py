@@ -255,6 +255,7 @@ class MainFrame(wx.Frame):
 
     def _create_list_columns(self):
         if not self._columns_created:
+            self._columns_created = True
             self._widget_list_ctrl.InsertColumn(0, "ID")
             self._widget_list_ctrl.InsertColumn(1, "Title")
             self._widget_list_ctrl.InsertColumn(2, "Pre-Wait")
