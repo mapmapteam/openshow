@@ -12,7 +12,7 @@
     </cue>
     <cue identifier="2" title="Load media 2" pre_wait="0.0" post_wait="1.0">
         <action type="osc">
-            <attr name="port" value="56789" />
+            <attr name="port" value="12345" />
             <attr name="path" value="/mapmap/media/load ,s movie2.mov" />
         </action>
     </cue>
