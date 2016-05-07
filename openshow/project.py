@@ -76,10 +76,14 @@ class ProjectPersistance(object):
         return ret
 
     def _parse_attribute(self, element, attribute, default=None):
-      if element.hasAttribute(attribute):
-          return element.getAttribute(attribute)
-      else:
-          return default
+        _type = type(default) 
+        if element.hasAttribute(attribute):
+            if _type == type(None):
+                return element.getAttribute(attribute)
+            else:
+                return _type(element.getAttribute(attribute))
+        else:
+            return default
 
     def save_to_project_file(self, cue_sheet, project_file_path=None):
         raise NotImplementedError("To do")

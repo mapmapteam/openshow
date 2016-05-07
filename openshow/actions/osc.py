@@ -127,8 +127,10 @@ class OscAction(cue.Action):
         @rtype: L{twisted.internet.defer.Deferred}
         """
         yield defer.succeed(None)
-        message = create_message_auto(self._path, *self._args)
-        yield send_async_udp(message, self._port, self._host)
+        message = create_message_auto(self.get_attribute("path"),
+                *self.get_attribute("args"))
+        # FIXME: check for an int port earlier
+        yield send_async_udp(message, int(self.get_port()), self.get_host())
         # TODO: support TCP as well
         # print("OscAction.execute: TODO")
         defer.returnValue(None)

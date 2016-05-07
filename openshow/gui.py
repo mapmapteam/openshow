@@ -98,6 +98,8 @@ class MainFrame(wx.Frame):
 
     def _go_button_cb(self, event):
         print("GO")
+        # FIXME: did we make sure the right cue is selected?
+        self._cue_sheet.go()
 
     def _bind_list_ctrl_event_callbacks(self):
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self._list_item_selected_cb,

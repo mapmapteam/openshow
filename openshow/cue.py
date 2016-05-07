@@ -315,7 +315,8 @@ class CueSheet(object):
         """
         if self.has_cue(identifier):
             self._selected_identifier = identifier
-            self.signal_sheet_selected_cue_changed(identifier)
+            _cue = self.get_cue_by_identifier(identifier)
+            self.signal_sheet_selected_cue_changed(_cue)
         else:
             raise RuntimeError("No such cue %s" % (identifier))
 
