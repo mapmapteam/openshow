@@ -2,11 +2,14 @@ OpenShow
 =========
 OpenShow is a show control app to trigger theatrical cues at a specific time.
 
+It is a cue sheet editor for stage managing.
+
 It currently supports the following action types:
 * send OSC messages.
 
 Authors:
 * Alexandre Quessy
 * Sofian Audry
+* Dame Diongue
 
 License: LGPL
