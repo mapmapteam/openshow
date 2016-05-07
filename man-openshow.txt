@@ -2,4 +2,4 @@
 openshow
 
 [HISTORY]
-Written by Alexandre Quessy in 2016.
+Written by Alexandre Quessy and Sofian Audry in 2016.

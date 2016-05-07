@@ -1,10 +1,12 @@
-Open Show
+OpenShow
 =========
-Open Show is an open source show control utility.
+OpenShow is a show control app to trigger theatrical cues at a specific time.
 
-It currently supports OSC.
+It currently supports the following action types:
+* send OSC messages.
 
 Authors:
 * Alexandre Quessy
+* Sofian Audry
 
-License: MIT/X
+License: LGPL
