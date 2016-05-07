@@ -53,6 +53,7 @@ class ProjectPersistance(object):
             _title = self._parse_attribute(cue_element, "title", "<no title>")
             _pre_wait = self._parse_attribute(cue_element, "pre_wait", 0.0)
             _post_wait = self._parse_attribute(cue_element, "post_wait", 0.0)
+            _follow = self._parse_attribute(cue_element, "follow", cue.FOLLOW_AUTO_CONTINUE)
 
             # Extract action (for now only supports a single action)
             actions_elements = cue_element.getElementsByTagName("action")
@@ -73,7 +74,7 @@ class ProjectPersistance(object):
                 value = self._parse_attribute(attr, "value")
                 action.set_attribute(name, value)
 
-            _cue = cue.Cue(_identifier, _pre_wait, _post_wait, _title, action);
+            _cue = cue.Cue(_identifier, _pre_wait, _post_wait, _title, action, follow=_follow);
             ret.append(_cue)
         return ret
 

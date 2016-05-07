@@ -8,9 +8,11 @@ from openshow import timer
 from twisted.internet import defer
 from twisted.internet import reactor
 
-AUTO_CONTINUE = "auto-continue"
-AUTO_FOLLOW = "auto-follow"
-DO_NOT_CONTINUE = "no-continue"
+FOLLOW_AUTO_CONTINUE = "auto-continue" # trigger next cue right away (after its post_wait)
+# TODO F...OLLOW_AUTO_FOLLOW = "auto-follow" # XXX Not implemented yet - trigger next cue once this one's duration is done (after its post_wait)
+FOLLOW_DO_NOT_CONTINUE = "no-continue" # stop after this cue is done (but select next one)
+# TODO: LOG_LEVEL_INFO = "info"
+# TODO: LOG_LEVEL_DEBUG = "debug"
 
 
 class Cue(object):
@@ -22,16 +24,18 @@ class Cue(object):
     a cue sheet.
 
     Cues can have a pre-wait delay, and a post-wait delay.
-    Post-wait delay is only useful if in AUTO_CONTINUE continue mode.
+    Post-wait delay is only useful if in FOLLOW_AUTO_CONTINUE continue mode.
     """
     def __init__(self, identifier="", pre_wait=0.0, post_wait=0.0, title="",
-            action=None):
+            action=None, follow=None):
         self._identifier = identifier # or "Number"
         self._deferred = None
         self._pre_wait = pre_wait
         self._post_wait = post_wait
         self._title = title
-        self._continue = AUTO_CONTINUE
+        self._follow = FOLLOW_AUTO_CONTINUE
+        if follow is not None:
+            self._follow = follow
         self._delayed_call_pre_wait  = None
         self._delayed_call_post_wait = None
         self._timer_pre_wait = timer.Timer()
@@ -44,6 +48,7 @@ class Cue(object):
         self.signal_done_pre_wait = sig.Signal() # param: self
         self.signal_done_post_wait = sig.Signal() # param: self
         self.signal_cancelled = sig.Signal() # param: self
+        self.signal_log = sig.Signal() # params: self, message, level
 
     def set_action(self, action):
         self._action = action
@@ -147,34 +152,64 @@ class Cue(object):
                 self._pre_wait, self._post_wait, self._action)
 
     def get_identifier(self):
+        """
+        @rtype: C{str}
+        """
         return self._identifier
 
     def get_pre_wait(self):
+        """
+        @rtype: C{float}
+        """
         return self._pre_wait
 
     def get_post_wait(self):
+        """
+        @rtype: C{float}
+        """
         return self._post_wait
 
     def get_title(self):
+        """
+        @rtype: C{str}
+        """
         return self._title
 
-    def get_continue(self):
-        return self._continue
+    def get_follow(self):
+        """
+        @rtype: C{str}
+        """
+        return self._follow
 
     def set_identifier(self, value):
+        """
+        @type value: C{str}
+        """
         self._identifier = value
 
     def set_pre_wait(self, value):
+        """
+        @type value: C{float}
+        """
         self._pre_wait = float(value)
 
     def set_post_wait(self, value):
+        """
+        @type value: C{float}
+        """
         self._post_wait = float(value)
 
     def set_title(self, value):
+        """
+        @type value: C{str}
+        """
         self._title = str(value)
 
-    def set_continue(self, value):
-        self._continue = value
+    def set_follow(self, value):
+        """
+        @type value: C{str}
+        """
+        self._follow = value
 
     def _do_execute(self):
         """
@@ -194,9 +229,17 @@ class Action(object):
         return defer.succeed(None)
 
     def set_attribute(self, name, value):
+        """
+        @type name: C{str}
+        @type value: C{str}, C{float} or C{int}
+        """
         self._attributes[name] = value
 
     def get_attribute(self, name):
+        """
+        @type name: C{str}
+        @rtype value: C{str}, C{float} or C{int}
+        """
         return self._attributes[name]
 
     def has_attribute(self, name):
@@ -270,10 +313,15 @@ class CueSheet(object):
             self.signal_sheet_done()
             self._is_running = False # we are done
         else:
-            # Pretty tricky: recursive inlineCallbacks deferreds
-            # But it seems to work OK
             self.select_cue(next_cue.get_identifier())
-            yield self._go_cue(next_cue)
+            if cue_item.get_follow() == FOLLOW_AUTO_CONTINUE:
+                # Pretty tricky: recursive inlineCallbacks deferreds
+                # But it seems to work OK
+                yield self._go_cue(next_cue)
+            else:
+                # that's it. We are done.
+                self.signal_sheet_done()
+                self._is_running = False # we are done
 
     def stop(self):
         """

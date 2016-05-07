@@ -174,3 +174,41 @@ class TestCueSheet(unittest.TestCase):
         _action = cue_sheet.get_cue_by_identifier("3").get_action()
         self.assertEqual(_action.executed, True)
         yield timer.later(1.1)
+
+    @defer.inlineCallbacks
+    def test_03_no_follow(self):
+        cue_sheet = cue.CueSheet()
+        _timer = timer.Timer()
+
+        cues = [
+                # identifier, pre-wait, post-wait
+                cue.Cue("1", 0.0, 1.0, "title1",
+                        DummyAction()),
+                cue.Cue("2", 0.0, 1.0, "title2",
+                        DummyAction(), cue.FOLLOW_DO_NOT_CONTINUE),
+                cue.Cue("3", 0.0, 1.0, "title3",
+                        DummyAction()),
+        ]
+        cue_sheet.set_cues(cues)
+        cue_sheet.go()
+
+        yield timer.later(0.1)
+        _action = cue_sheet.get_cue_by_identifier("1").get_action()
+        self.assertEqual(_action.executed, True)
+        _action = cue_sheet.get_cue_by_identifier("2").get_action()
+        self.assertEqual(_action.executed, False)
+        _action = cue_sheet.get_cue_by_identifier("3").get_action()
+        self.assertEqual(_action.executed, False)
+
+        yield timer.later(1.1)
+        _action = cue_sheet.get_cue_by_identifier("2").get_action()
+        self.assertEqual(_action.executed, True)
+        _action = cue_sheet.get_cue_by_identifier("3").get_action()
+        self.assertEqual(_action.executed, False)
+
+        yield timer.later(1.1)
+        _action = cue_sheet.get_cue_by_identifier("3").get_action()
+        self.assertEqual(_action.executed, False)
+        selected = cue_sheet.get_selected_cue_identifier()
+        self.assertEqual(selected, "3")
+        yield timer.later(1.1)
