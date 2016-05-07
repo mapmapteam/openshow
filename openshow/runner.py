@@ -5,7 +5,7 @@ The main entry to our application, where we parse command line arguments.
 from twisted.python import log
 from twisted.internet import wxreactor
 wxreactor.install()
-# import t.i.reactor only after installing wxreactor:
+# import twisted.internet.reactor only after installing wxreactor:
 from twisted.internet import reactor
 import openshow
 from openshow import gui
@@ -13,12 +13,12 @@ import sys
 import os
 import optparse
 
+
 def run():
     """
     Parses the command line options and runs the application.
     """
     DEFAULT_OSC_RECEIVE_PORT = 13333
-    # DEFAULT_PROJECT_FILE = "~/.openshow.xml"
     DEFAULT_PROJECT_FILE = ""
 
     parser = optparse.OptionParser(usage="%prog",
@@ -38,6 +38,10 @@ def run():
 
     if options.verbose:
         verbose = True
+
+    # FIXME: for now, let's just make it always verbose
+    verbose = True
+
     osc_receive_port = options.osc_receive_port
     project_file = options.project_file
 
@@ -61,7 +65,9 @@ def run():
             print("No project file to load")
     else:
         if os.path.exists(project_file):
-            reactor.callLater(1, _later_load_file)
+            # TODO: instead of waiting for an arbitrary amount of time
+            # wait for the window to actually be created.
+            reactor.callLater(0.5, _later_load_file)
         else:
             print("Error: Project file %s does not exist" % (project_file))
             sys.exit(1)
