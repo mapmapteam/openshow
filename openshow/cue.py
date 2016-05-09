@@ -8,9 +8,12 @@ from openshow import timer
 from twisted.internet import defer
 from twisted.internet import reactor
 
-FOLLOW_AUTO_CONTINUE = "auto-continue" # trigger next cue right away (after its post_wait)
-# TODO F...OLLOW_AUTO_FOLLOW = "auto-follow" # XXX Not implemented yet - trigger next cue once this one's duration is done (after its post_wait)
-FOLLOW_DO_NOT_CONTINUE = "no-continue" # stop after this cue is done (but select next one)
+
+# Constants
+FOLLOW_AUTO_CONTINUE = "auto_continue" # trigger next cue right away (after its post_wait)
+FOLLOW_WHEN_DONE = "follow_when_done"
+# trigger next cue once this one's duration is done (after its post_wait)
+FOLLOW_DO_NOT_CONTINUE = "no_continue" # stop after this cue is done (but select next one)
 # TODO: LOG_LEVEL_INFO = "info"
 # TODO: LOG_LEVEL_DEBUG = "debug"
 
@@ -32,6 +35,7 @@ class Cue(object):
         self._deferred = None
         self._pre_wait = pre_wait
         self._post_wait = post_wait
+        # TODO: self._duration = duration
         self._title = title
         self._follow = FOLLOW_AUTO_CONTINUE
         if follow is not None:
@@ -96,7 +100,22 @@ class Cue(object):
         Executes its actions.
         """
         self.signal_done_pre_wait(self)
-        yield self._do_execute()
+        # we should not wait for it to be done
+        # if FOLLOW_AUTO_CONTINUE 
+        wait_for_when_done_before_post_wait = False
+        if self._follow == FOLLOW_WHEN_DONE:
+            wait_for_when_done_before_post_wait = True
+            # we have to wait
+        elif self._follow == FOLLOW_DO_NOT_CONTINUE:
+            wait_for_when_done_before_post_wait = True
+            # we can also wait, why not?
+        if wait_for_when_done_before_post_wait:
+            yield self._do_execute()
+        else:
+            # This waits for the execution to be done
+            yield defer.succeed(None)
+            d = self._do_execute() # discard the Deferred
+            d = None
         self._delayed_call_pre_wait = None
         self._timer_post_wait.reset()
         if self._post_wait == 0.0:
@@ -205,11 +224,23 @@ class Cue(object):
         """
         self._title = str(value)
 
+    def get_supported_follow_values(self):
+        supported = [
+                FOLLOW_AUTO_CONTINUE,
+                FOLLOW_WHEN_DONE,
+                FOLLOW_DO_NOT_CONTINUE
+                ]
+        return supported
+
     def set_follow(self, value):
         """
         @type value: C{str}
         """
-        self._follow = value
+        supported = self.get_supported_follow_values()
+        if value in supported:
+            self._follow = value
+        else:
+            raise ValueError("Unknown follow value %s" % (value))
 
     def _do_execute(self):
         """

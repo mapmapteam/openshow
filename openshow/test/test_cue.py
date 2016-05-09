@@ -9,13 +9,32 @@ from openshow import cue
 from openshow import timer
 from openshow.actions import osc
 
-class DummyAction(object):
+
+class DummyAction(cue.Action):
     def __init__(self):
+        # FIXME: call constructor
+        # cue.Action(self)
         self.executed = False
     
     def execute(self):
         self.executed = True
         return defer.succeed(None)
+
+
+class ActionThatTakesOneSecond(cue.Action):
+    def __init__(self):
+        # FIXME: call constructor
+        # cue.Action(self)
+        self.executed = False
+    
+    @defer.inlineCallbacks
+    def execute(self):
+        yield timer.later(1.0)
+        self.executed = True
+
+
+def _get_action(cue_sheet, cue_identifier):
+    return cue_sheet.get_cue_by_identifier(cue_identifier).get_action()
 
 
 class TestCue(unittest.TestCase):
@@ -156,6 +175,7 @@ class TestCueSheet(unittest.TestCase):
         cue_sheet.set_cues(cues)
         cue_sheet.go()
 
+        # Initially, the first cue should be done right away
         yield timer.later(0.1)
         _action = cue_sheet.get_cue_by_identifier("1").get_action()
         self.assertEqual(_action.executed, True)
@@ -164,12 +184,14 @@ class TestCueSheet(unittest.TestCase):
         _action = cue_sheet.get_cue_by_identifier("3").get_action()
         self.assertEqual(_action.executed, False)
 
+        # After one second, the second should be triggered
         yield timer.later(1.1)
         _action = cue_sheet.get_cue_by_identifier("2").get_action()
         self.assertEqual(_action.executed, True)
         _action = cue_sheet.get_cue_by_identifier("3").get_action()
         self.assertEqual(_action.executed, False)
 
+        # After two seconds, the third should be triggered
         yield timer.later(1.1)
         _action = cue_sheet.get_cue_by_identifier("3").get_action()
         self.assertEqual(_action.executed, True)
@@ -192,6 +214,7 @@ class TestCueSheet(unittest.TestCase):
         cue_sheet.set_cues(cues)
         cue_sheet.go()
 
+        # Initially, the first cue should be done right away
         yield timer.later(0.1)
         _action = cue_sheet.get_cue_by_identifier("1").get_action()
         self.assertEqual(_action.executed, True)
@@ -200,15 +223,64 @@ class TestCueSheet(unittest.TestCase):
         _action = cue_sheet.get_cue_by_identifier("3").get_action()
         self.assertEqual(_action.executed, False)
 
+        # After one second, the second should be triggered
         yield timer.later(1.1)
         _action = cue_sheet.get_cue_by_identifier("2").get_action()
         self.assertEqual(_action.executed, True)
         _action = cue_sheet.get_cue_by_identifier("3").get_action()
         self.assertEqual(_action.executed, False)
 
+        # Even after two seconds, the third should NEVER be triggered
         yield timer.later(1.1)
         _action = cue_sheet.get_cue_by_identifier("3").get_action()
         self.assertEqual(_action.executed, False)
         selected = cue_sheet.get_selected_cue_identifier()
         self.assertEqual(selected, "3")
         yield timer.later(1.1)
+
+    @defer.inlineCallbacks
+    def test_04_follow_when_done(self):
+        cue_sheet = cue.CueSheet()
+        _timer = timer.Timer()
+
+        cues = [
+                # identifier, pre-wait, post-wait
+                cue.Cue("1", 0.0, 1.0, "title1",
+                        ActionThatTakesOneSecond(), cue.FOLLOW_WHEN_DONE),
+                cue.Cue("2", 0.0, 1.0, "title1",
+                        ActionThatTakesOneSecond(), cue.FOLLOW_AUTO_CONTINUE),
+                cue.Cue("3", 0.0, 0.0, "title2",
+                        DummyAction()),
+        ]
+        cue_sheet.set_cues(cues)
+        cue_sheet.go()
+
+        # Initially, the first cue should in progress
+        yield timer.later(0.1)
+        _action = cue_sheet.get_cue_by_identifier("1").get_action()
+        self.assertEqual(_action.executed, False)
+        _action = cue_sheet.get_cue_by_identifier("2").get_action()
+        self.assertEqual(_action.executed, False)
+
+        # After one second, the first cue should be done
+        # But, it should be in post-wait
+        yield timer.later(1.1)
+        _action = cue_sheet.get_cue_by_identifier("1").get_action()
+        self.assertEqual(_action.executed, True)
+        _action = cue_sheet.get_cue_by_identifier("2").get_action()
+        self.assertEqual(_action.executed, False)
+        _first_is_post_waiting = cue_sheet.get_cue_by_identifier("1").is_post_waiting()
+        self.assertEqual(_first_is_post_waiting, True)
+
+        # After two seconds, the first cue should be done
+        yield timer.later(1.1)
+        self.assertEqual(_get_action(cue_sheet, "1").executed, True)
+        self.assertEqual(_get_action(cue_sheet, "2").executed, False)
+
+        # After four seconds, the second cue should finally be done
+        yield timer.later(3.1)
+        self.assertEqual(_get_action(cue_sheet, "2").executed, True)
+        # But the last cue should never be triggered
+        self.assertEqual(_get_action(cue_sheet, "3").executed, False)
+
+    test_04_follow_when_done.skip = "FIXME: action 2 is never executed, it seems"
