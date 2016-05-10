@@ -80,6 +80,11 @@ class MainFrame(wx.Frame):
                 style=wx.LC_REPORT | wx.BORDER_NONE)
         vertical_sizer.Add(self._widget_list_ctrl, 1, wx.EXPAND)
 
+        # Status bar
+        self._widget_status_bar = wx.StatusBar(self, wx.NewId(),
+                name="main_status_bar")
+        vertical_sizer.Add(self._widget_status_bar, 1, wx.EXPAND)
+
         self.SetSizer(vertical_sizer)
         self.SetAutoLayout(True)
         self._columns_created = False
@@ -88,6 +93,10 @@ class MainFrame(wx.Frame):
         self._current_item = 0 # Do this before _populate_list_ctrl
         self._populate_list_ctrl()
         self._bind_list_ctrl_event_callbacks()
+        self.set_status_bar_text("Welcome")
+
+    def set_status_bar_text(self, text):
+        self._widget_status_bar.PushStatusText(text)
 
     def _connect_to_new_cue_sheet_signals(self):
         self._cue_sheet.signal_sheet_selected_cue_changed.connect(
@@ -100,8 +109,10 @@ class MainFrame(wx.Frame):
             self._connect_to_new_cue_sheet_signals()
             self._current_item = 0 # Do this before _populate_list_ctrl
             self._populate_list_ctrl()
+            self.set_status_bar_text("Succesfully loaded %s" % (project_file_path))
         except RuntimeError as e:
             print(e)
+            self.set_status_bar_text(str(e))
             show_error_dialog(self, str(e))
 
     def _cue_sheet_selected_cue_changed_cb(self, cue_item):
