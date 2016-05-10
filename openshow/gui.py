@@ -65,17 +65,22 @@ class MainFrame(wx.Frame):
         # make sure reactor.stop() is used to stop event loop:
         wx.EVT_CLOSE(self, lambda evt: reactor.stop())
 
-        sizer = wx.BoxSizer(wx.VERTICAL)
+        vertical_sizer = wx.BoxSizer(wx.VERTICAL)
+        buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        vertical_sizer.Add(buttons_sizer, 1, wx.ALL | wx.CENTER)
+
+        # Go button
+        go_button = wx.Button(self, label="GO")
+        go_button.Bind(wx.EVT_BUTTON, self._go_button_cb)
+        buttons_sizer.Add(go_button, 1, wx.ALL | wx.CENTER)
+
+        # Cue list
         list_ctrl_id = wx.NewId()
         self._widget_list_ctrl = wx.ListCtrl(self, list_ctrl_id,
                 style=wx.LC_REPORT | wx.BORDER_NONE)
-        sizer.Add(self._widget_list_ctrl, 1, wx.EXPAND)
+        vertical_sizer.Add(self._widget_list_ctrl, 1, wx.EXPAND)
 
-        go_button = wx.Button(self, label="GO")
-        go_button.Bind(wx.EVT_BUTTON, self._go_button_cb)
-        sizer.Add(go_button, 1, wx.ALL | wx.CENTER)
-
-        self.SetSizer(sizer)
+        self.SetSizer(vertical_sizer)
         self.SetAutoLayout(True)
         self._columns_created = False
         self._cue_sheet = cue.CueSheet()
