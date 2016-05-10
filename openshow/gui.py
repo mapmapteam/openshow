@@ -36,7 +36,7 @@ def show_error_dialog(parent, message):
     Error dialog.
     """
     # FIXME: improve this dialog - make it a real error one
-    dialog = wx.Dialog(parent, wx.NewId(), message)
+    dialog = wx.MessageDialog(parent, message=message, caption="Error", style=wx.ICON_ERROR)
     dialog.ShowModal()
     dialog.Destroy()
 
