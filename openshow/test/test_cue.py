@@ -12,8 +12,7 @@ from openshow.actions import osc
 
 class DummyAction(cue.Action):
     def __init__(self):
-        # FIXME: call constructor
-        # cue.Action(self)
+        super(DummyAction, self).__init__()
         self.executed = False
     
     def execute(self):
@@ -23,8 +22,7 @@ class DummyAction(cue.Action):
 
 class ActionThatTakesOneSecond(cue.Action):
     def __init__(self):
-        # FIXME: call constructor
-        # cue.Action(self)
+        super(ActionThatTakesOneSecond, self).__init__()
         self.executed = False
     
     @defer.inlineCallbacks
