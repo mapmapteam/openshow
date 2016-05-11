@@ -7,8 +7,8 @@ from twisted.internet import wxreactor
 wxreactor.install()
 # import twisted.internet.reactor only after installing wxreactor:
 from twisted.internet import reactor
-import openshow
-from openshow import gui
+import cuebidoo
+from cuebidoo import gui
 import sys
 import os
 import optparse
@@ -22,7 +22,7 @@ def run():
     DEFAULT_PROJECT_FILE = ""
 
     parser = optparse.OptionParser(usage="%prog",
-            version=str(openshow.__version__))
+            version=str(cuebidoo.__version__))
     parser.add_option("-p", "--osc-receive-port", type="int",
             default=DEFAULT_OSC_RECEIVE_PORT,
             help="Receive OSC messages port number (%default)")

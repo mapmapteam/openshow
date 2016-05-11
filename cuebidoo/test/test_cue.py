@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; tab-width: 4; mode: python -*-
 """
-Test cases for openshow.cue
+Test cases for cuebidoo.cue
 """
 from twisted.trial import unittest
 from twisted.internet import defer
-from openshow import cue
-from openshow import timer
-from openshow.actions import osc
+from cuebidoo import cue
+from cuebidoo import timer
+from cuebidoo.actions import osc
 
 
 class DummyAction(cue.Action):

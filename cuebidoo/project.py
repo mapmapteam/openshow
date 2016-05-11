@@ -4,12 +4,12 @@
 A project contains cues. XML files are used to describe projects.
 
 Usage:
-    PYTHONPATH=$PWD python ./openshow/project.py examples/project_01.xml
+    PYTHONPATH=$PWD python ./cuebidoo/project.py examples/project_01.xml
 """
 from xml.dom import minidom
 import os
-from openshow import cue
-from openshow.actions import osc
+from cuebidoo import cue
+from cuebidoo.actions import osc
 
 
 class ProjectPersistance(object):
@@ -29,7 +29,7 @@ class ProjectPersistance(object):
 
         Make sure the config_file_path exists.
         @raise: RuntimeError
-        @return: L{openshow.cue.CueSheet}
+        @return: L{cuebidoo.cue.CueSheet}
         """
         cue_sheet = cue.CueSheet()
         if not os.path.exists(project_file_path):

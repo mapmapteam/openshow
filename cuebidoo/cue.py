@@ -3,8 +3,8 @@
 """
 A project contains cues. XML files are used to describe projects.
 """
-from openshow import sig
-from openshow import timer
+from cuebidoo import sig
+from cuebidoo import timer
 from twisted.internet import defer
 from twisted.internet import reactor
 
@@ -59,7 +59,7 @@ class Cue(object):
 
     def get_action(self):
         """
-        @rtype: L{openshow.cue.Action}
+        @rtype: L{cuebidoo.cue.Action}
         """
         return self._action
 

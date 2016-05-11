@@ -6,21 +6,21 @@ from setuptools import setup
 import os
 import sys
 import subprocess
-import openshow
+import cuebidoo
 from twisted.python import procutils
 
 setup(
-    name = "openshow",
-    version = openshow.__version__,
+    name = "cuebidoo",
+    version = cuebidoo.__version__,
     author = "Alexandre Quessy, Sofian Audry, Dame Diongue",
     author_email = "alexandre@quessy.net",
-    url = "http://github.com/mapmapteam/openshow",
+    url = "http://github.com/mapmapteam/cuebidoo",
     description = "Open Show Control",
     scripts = [
-        "scripts/openshow", 
+        "scripts/cuebidoo", 
         ],
     license="LGPL",
-    packages = ["openshow", "openshow/test"],
+    packages = ["cuebidoo", "cuebidoo/test"],
     long_description = """OpenShow is a show control app to trigger theatrical cues at a specific time..""",
     classifiers = [
         "Framework :: Twisted",
@@ -35,9 +35,9 @@ setup(
 
 if sys.argv[1] == "build":
     commands = [
-        'help2man --no-info --include=man-openshow.txt --no-discard-stderr --name="OpenShow" ./scripts/openshow --output=openshow.1',
+        'help2man --no-info --include=man-cuebidoo.txt --no-discard-stderr --name="CueBiDoo" ./scripts/cuebidoo --output=cuebidoo.1',
         ]
-    if os.path.exists("man-openshow.txt"):
+    if os.path.exists("man-cuebidoo.txt"):
         try:
             help2man = procutils.which("help2man")[0]
         except IndexError:

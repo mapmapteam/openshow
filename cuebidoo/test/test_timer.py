@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; tab-width: 4; mode: python -*-
 """
-Test cases for openshow.timer
+Test cases for cuebidoo.timer
 """
 from twisted.trial import unittest
-from openshow import timer
+from cuebidoo import timer
 
 class TestTimer(unittest.TestCase):
     def test_01_timer(self):

@@ -3,7 +3,7 @@
 """
 OscAction
 """
-from openshow import cue
+from cuebidoo import cue
 from twisted.internet import defer
 from twisted.internet import reactor
 from txosc import osc

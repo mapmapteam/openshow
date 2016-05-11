@@ -10,8 +10,8 @@ from twisted.internet import reactor
 import sys
 import wx
 import os
-from openshow import cue
-from openshow import project
+from cuebidoo import cue
+from cuebidoo import project
 
 
 def show_open_file_dialog(parent):
