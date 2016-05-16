@@ -39,7 +39,18 @@ class ProjectPersistance(object):
         doc = minidom.parse(self._project_file_path)
         cues = self._parse_cues(doc)
         cue_sheet.set_cues(cues)
+        options = self._parse_options(doc)
+        cue_sheet.set_options(options)
         return cue_sheet
+
+    def _parse_options(self, doc):
+        ret = {}
+        option_elements = doc.getElementsByTagName("option")
+        for option_element in option_elements:
+            _name = self._parse_attribute(option_element, "name")
+            _value = self._parse_attribute(option_element, "value")
+            ret[_name] = _value
+        return ret
 
     def _parse_cues(self, doc):
         """

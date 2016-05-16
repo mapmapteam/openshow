@@ -18,6 +18,16 @@ FOLLOW_DO_NOT_CONTINUE = "no_continue" # stop after this cue is done (but select
 # TODO: LOG_LEVEL_DEBUG = "debug"
 
 
+def cast_value(value, default_value):
+    try:
+        _type = type(default_value)
+        return _type(value)
+    except ValueError as e:
+        raise RuntimeError(str(e))
+        # return default_value
+
+
+
 class Cue(object):
     """
     Cue.
@@ -45,6 +55,7 @@ class Cue(object):
         self._timer_pre_wait = timer.Timer()
         self._timer_post_wait = timer.Timer()
         self._action = action
+        self._cue_sheet_options = {}
 
         # Public attributes:
         self.signal_go = sig.Signal() # param: self
@@ -53,6 +64,9 @@ class Cue(object):
         self.signal_done_post_wait = sig.Signal() # param: self
         self.signal_cancelled = sig.Signal() # param: self
         self.signal_log = sig.Signal() # params: self, message, level
+
+    def set_cue_sheet_options(self, options):
+        self._cue_sheet_options = options
 
     def set_action(self, action):
         self._action = action
@@ -109,6 +123,7 @@ class Cue(object):
         elif self._follow == FOLLOW_DO_NOT_CONTINUE:
             wait_for_when_done_before_post_wait = True
             # we can also wait, why not?
+
         if wait_for_when_done_before_post_wait:
             yield self._do_execute()
         else:
@@ -249,12 +264,17 @@ class Cue(object):
         if self._action is None:
             return defer.succeed(None)
         else:
+            self._action.set_cue_sheet_options(self._cue_sheet_options)
             return self._action.execute()
 
 
 class Action(object):
     def __init__(self):
         self._attributes = {}
+        self._cue_sheet_options = {}
+
+    def set_cue_sheet_options(self, cue_sheet_options):
+        self._cue_sheet_options = cue_sheet_options
 
     def execute(self):
         return defer.succeed(None)
@@ -263,13 +283,18 @@ class Action(object):
         """
         @type name: C{str}
         @type value: C{str}, C{float} or C{int}
+        @raise: L{KeyError}
         """
-        self._attributes[name] = value
+        if name in self._attributes:
+            self._attributes[name] = value
+        else:
+            raise KeyError("No such attribute %s" % (name))
 
     def get_attribute(self, name):
         """
         @type name: C{str}
         @rtype value: C{str}, C{float} or C{int}
+        @raise: L{KeyError}
         """
         return self._attributes[name]
 
@@ -278,7 +303,11 @@ class Action(object):
 
     # TODO: add type support
     def _add_attribute(self, name, default):
-        self.set_attribute(name, default)
+        """
+        FIXME: this is supposed to be protected.
+        """
+        # self.set_attribute(name, default)
+        self._attributes[name] = value
 
     def get_type(self):
         return None
@@ -292,6 +321,7 @@ class CueSheet(object):
     """
     def __init__(self):
         self._cues = []
+        self._options = []
         # self._selected_index = 0
         self._selected_identifier = ""
         self._is_running = False
@@ -309,6 +339,14 @@ class CueSheet(object):
         self.signal_cue_done_post_wait = sig.Signal() # param: cue
         self.signal_cue_cancelled = sig.Signal() # param: cue
 
+    def set_options(self, options):
+        self._options = options
+        for cue in self.get_cues():
+            cue.set_cue_sheet_options(self._options)
+
+    def get_options(self):
+        return self._options
+
     def go(self):
         """
         @rtype: L{twisted.internet.defer.Deferred}
@@ -316,6 +354,10 @@ class CueSheet(object):
         if self._is_running:
             print("already running")
             return defer.succeed(None)
+
+        # Make sure the options are propagated to all its cues
+        for cue in self.get_cues():
+            cue.set_cue_sheet_options(self._options)
 
         if self.get_size() == 0:
             print("this cue sheet contains no cues.")
@@ -463,6 +505,7 @@ class CueSheet(object):
         if len(self._cues) == 0:
             was_empty = True
         self._cues.append(value)
+        value.set_cue_sheet_options(self._options)
         if was_empty:
             self._selected_identifier = value.get_identifier()
 
